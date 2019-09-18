@@ -17,5 +17,18 @@
                 <wx.MenuItem parentMenu="None" id="4" text="'Menu item 2 2'" x.Menu.Append="x.MenuItem"/>
             </wx.Menu>
         </wx.MenuBar>
+        <wx.Panel parent="x.Frame">
+            <wx.Button xobj.id="button1" parent="x.Panel" x.Button.Label="'Label from attribute'"/>
+            <wx.Button xobj.id="button2" parent="x.Panel" label="'Label2'"/>
+            <wx.GridBagSizer vgap="0" hgap="0" x.Panel.Sizer="x.GridBagSizer">
+                <x.GridBagSizer HGap="100" VGap="50"/>
+                <wx.GBSizerItem window="x.button1" pos="(0,0)" x.GridBagSizer.Add="x.GBSizerItem">
+                    <x.GBSizerItem Proportion="1" Flag="wx.ALL | wx.CENTER" Border="10"/>
+                </wx.GBSizerItem>
+                <wx.GBSizerItem window="x.button2" pos="(1,1)" x.GridBagSizer.Add="x.GBSizerItem">
+                    <x.GBSizerItem Proportion="1" Flag="wx.ALL" Border="20"/>
+                </wx.GBSizerItem>
+            </wx.GridBagSizer>
+        </wx.Panel>
     </wx.Frame>
 </xobj:objects>
