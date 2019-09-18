@@ -1,0 +1,21 @@
+<xobj:objects
+        xmlns="http://namespace.xobj.org/xobj/wx"
+        xmlns:xobj="http://namespace.xobj.org/xobj">
+    <wx.Frame xobj.id="main_frame" parent="None" title="'Hello Frame'">
+        <wx.StatusBar parent="x.Frame" id="1" x.Frame.StatusBar="x.StatusBar">
+            <x.StatusBar StatusText="'New Status'"/>
+        </wx.StatusBar>
+        <wx.MenuBar x.Frame.MenuBar="x.MenuBar">
+            <wx.Menu x.MenuBar.Append="*(x.Menu, 'Menu&amp;1')">
+                <wx.MenuItem parentMenu="None" id="1" text="'Menu item 1 1'">
+                    <x.Menu.Append menuItem="x.MenuItem"/>
+                </wx.MenuItem>
+                <wx.MenuItem parentMenu="None" id="2" text="'Menu item 1 2'" x.Menu.Append="x.MenuItem"/>
+            </wx.Menu>
+            <wx.Menu x.MenuBar.Append="*(x.Menu, 'Menu&amp;2')">
+                <wx.MenuItem parentMenu="None" id="3" text="'Menu item 2 1'" x.Menu.Append="x.MenuItem"/>
+                <wx.MenuItem parentMenu="None" id="4" text="'Menu item 2 2'" x.Menu.Append="x.MenuItem"/>
+            </wx.Menu>
+        </wx.MenuBar>
+    </wx.Frame>
+</xobj:objects>
