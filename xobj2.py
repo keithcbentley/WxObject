@@ -87,7 +87,6 @@ class Xobj2:
         attribute_name = str(XobjTag(xobj_namespace, None, 'id'))
         for internal_element in internal_elements:
             name = internal_element.attrib[attribute_name]
-            print('add internal object:', name)
             self.internal_objects[name] = internal_element
 
     def findall_elements(self, xpath):
@@ -104,7 +103,7 @@ class Xobj2:
                     nested_element = self.internal_objects[child_element.attrib['xobj_id']]
                     self.process_xml_element(nested_element, skip_root=True)
                 else:
-                    print('skipping', child_xobjtag)
+                    pass
             else:
                 self.process_xml_element(child_element)
         return
