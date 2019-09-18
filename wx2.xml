@@ -1,7 +1,7 @@
 <xobj:objects
         xmlns="http://namespace.xobj.org/xobj/wx"
         xmlns:xobj="http://namespace.xobj.org/xobj">
-    <wx.Frame xobj.id="main_frame" parent="None" title="'Hello Second Frame'">
+    <wx.Frame ui.id="main_frame" parent="None" title="'Hello Second Frame'">
         <wx.StatusBar parent="x.Frame" id="1" x.Frame.StatusBar="x.StatusBar">
             <x.StatusBar StatusText="'New Status'"/>
         </wx.StatusBar>
@@ -25,8 +25,8 @@
         </wx.Menu>
     </xobj:fragment>
     <xobj:fragment xobj:id="panel_contents">
-        <wx.Button xobj.id="button1" parent="x.Panel" x.Button.Label="'Label from attribute'"/>
-        <wx.Button xobj.id="button2" parent="x.Panel" label="'Label2'"/>
+        <wx.Button ui.id="button1" parent="x.Panel" x.Button.Label="'Label from attribute'"/>
+        <wx.Button ui.id="button2" parent="x.Panel" label="'Label2'"/>
         <xobj:include_xobj_fragment xobj_id="fragment1"/>
         <wx.GridBagSizer vgap="0" hgap="0" x.Panel.Sizer="x.GridBagSizer">
             <x.GridBagSizer HGap="0" VGap="0"/>
@@ -42,6 +42,6 @@
         </wx.GridBagSizer>
     </xobj:fragment>
     <xobj:fragment xobj:id="fragment1">
-        <wx.Button xobj.id="button3" parent="x.Panel" label="'Label3'"/>
+        <wx.Button ui.id="button3" parent="x.Panel" label="'Label3'"/>
     </xobj:fragment>
 </xobj:objects>

@@ -65,7 +65,7 @@ class XobjTag:
         return self.name == name
 
 
-class Xobj2:
+class XobjParser:
     def __init__(self, all_namespaces, xobjects):
         self.all_namespaces = all_namespaces
         if self.all_namespaces is None:

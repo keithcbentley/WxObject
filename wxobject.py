@@ -26,10 +26,10 @@ def dump(h, obj):
                 print('    ', k, '--->>>', v, 'type: ', type(v))
 
 
-class XObjects:
+class WxObjects:
     def __init__(self):
         super().__init__()
-        self.current_xobjid = None
+        self.current_uiid = None
         self.variable_counter = 0
         self.variable_name = ''
         self.last_names = {}
@@ -45,12 +45,12 @@ class XObjects:
         if self.output_codegen:
             print(s)
 
-    def codegen_set_current_variable_name(self, xobjid):
-        if xobjid is None:
+    def codegen_set_current_variable_name(self, uiid):
+        if uiid is None:
             self.variable_name = 'self.var{n}'.format(n=self.variable_counter)
             self.variable_counter += 1
             return
-        self.variable_name = 'self.' + xobjid
+        self.variable_name = 'self.' + uiid
 
     def codegen_get_current_variable_name(self):
         return self.variable_name
@@ -158,7 +158,7 @@ class XObjects:
             if needs_var:
                 self.__setattr__(last, thing)
 
-            self.codegen_set_current_variable_name(self.current_xobjid)
+            self.codegen_set_current_variable_name(self.current_uiid)
             self.codegen_functioncall(s, args, kwargs, needs_var)
             # Name updates must come AFTER function call generation so
             # that the name replacement is correct in the function code.
@@ -186,12 +186,12 @@ class XObjects:
 
     def xcall_attribs(self, s, attribs):
         attribs_copy = attribs.copy()
-        id_str = 'xobj.id'
-        xobjid = None
+        id_str = 'ui.id'
+        uiid = None
         if id_str in attribs_copy:
-            xobjid = attribs_copy[id_str]
+            uiid = attribs_copy[id_str]
             del attribs_copy[id_str]
-        self.current_xobjid = xobjid
+        self.current_uiid = uiid
         kwargs = {}
         for k, v in attribs_copy.items():
             if k.find('.') < 0:
@@ -201,8 +201,8 @@ class XObjects:
         for k in kwargs.keys():  # Remove undotted attributes.
             del attribs_copy[k]
         thing = self.xcall(s, **kwargs)
-        if xobjid is not None:
-            self.__setattr__(xobjid, thing)
+        if uiid is not None:
+            self.__setattr__(uiid, thing)
         for k, v in attribs_copy.items():
             self.xcall(k, v, needs_var=False)
 
@@ -216,11 +216,11 @@ class XObjects:
 if __name__ == '__main__':
     def main():
         app = wx.App(redirect=False)
-        xobjects = XObjects()
+        xobjects = WxObjects()
         xobjects.output_codegen = True
 
         # BEGIN FRAME
-        attribs = {'xobj.id': 'main_frame', 'parent': 'None', 'title': '"Hello Frame"'}
+        attribs = {'ui.id': 'main_frame', 'parent': 'None', 'title': '"Hello Frame"'}
         xobjects.xcall_attribs('wx.Frame', attribs)
 
         # BEGIN STATUS BAR
@@ -261,10 +261,10 @@ if __name__ == '__main__':
         # END PANEL
 
         # BEGIN BUTTONS
-        attribs = {'xobj.id': 'button1', 'parent': 'x.Panel', 'x.this.Label': '"Label from attribute"'}
+        attribs = {'ui.id': 'button1', 'parent': 'x.Panel', 'x.this.Label': '"Label from attribute"'}
         xobjects.xcall_attribs('wx.Button', attribs)
 
-        attribs = {'xobj.id': 'button2', 'parent': 'x.Panel', 'label': '"label2"'}
+        attribs = {'ui.id': 'button2', 'parent': 'x.Panel', 'label': '"label2"'}
         xobjects.xcall_attribs('wx.Button', attribs)
         # END BUTTONS
 
