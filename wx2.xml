@@ -1,0 +1,47 @@
+<xobj:objects
+        xmlns="http://namespace.xobj.org/xobj/wx"
+        xmlns:xobj="http://namespace.xobj.org/xobj">
+    <wx.Frame xobj.id="main_frame" parent="None" title="'Hello Second Frame'">
+        <wx.StatusBar parent="x.Frame" id="1" x.Frame.StatusBar="x.StatusBar">
+            <x.StatusBar StatusText="'New Status'"/>
+        </wx.StatusBar>
+        <wx.MenuBar x.Frame.MenuBar="x.MenuBar">
+            <xobj:include_xobj_fragment xobj_id="menubar_contents"/>
+        </wx.MenuBar>
+        <wx.Panel parent="x.Frame">
+            <xobj:include_xobj_fragment xobj_id="panel_contents"/>
+        </wx.Panel>
+    </wx.Frame>
+    <xobj:fragment xobj:id="menubar_contents">
+        <wx.Menu x.MenuBar.Append="*(x.Menu, 'Menu&amp;1')">
+            <wx.MenuItem parentMenu="None" id="1" text="'Menu item 1 1'">
+                <x.Menu.Append menuItem="x.MenuItem"/>
+            </wx.MenuItem>
+            <wx.MenuItem parentMenu="None" id="2" text="'Menu item 1 2'" x.Menu.Append="x.MenuItem"/>
+        </wx.Menu>
+        <wx.Menu x.MenuBar.Append="*(x.Menu, 'Menu&amp;2')">
+            <wx.MenuItem parentMenu="None" id="3" text="'Menu item 2 1'" x.Menu.Append="x.MenuItem"/>
+            <wx.MenuItem parentMenu="None" id="4" text="'Menu item 2 2'" x.Menu.Append="x.MenuItem"/>
+        </wx.Menu>
+    </xobj:fragment>
+    <xobj:fragment xobj:id="panel_contents">
+        <wx.Button xobj.id="button1" parent="x.Panel" x.Button.Label="'Label from attribute'"/>
+        <wx.Button xobj.id="button2" parent="x.Panel" label="'Label2'"/>
+        <xobj:include_xobj_fragment xobj_id="fragment1"/>
+        <wx.GridBagSizer vgap="0" hgap="0" x.Panel.Sizer="x.GridBagSizer">
+            <x.GridBagSizer HGap="0" VGap="0"/>
+            <wx.GBSizerItem window="x.button1" pos="(0,0)" x.GridBagSizer.Add="x.GBSizerItem">
+                <x.GBSizerItem Proportion="1" Flag="wx.ALL | wx.CENTER" Border="0"/>
+            </wx.GBSizerItem>
+            <wx.GBSizerItem window="x.button2" pos="(1,1)" x.GridBagSizer.Add="x.GBSizerItem">
+                <x.GBSizerItem Proportion="1" Flag="wx.ALL" Border="0"/>
+            </wx.GBSizerItem>
+            <wx.GBSizerItem window="x.button3" pos="(2,2)" x.GridBagSizer.Add="x.GBSizerItem">
+                <x.GBSizerItem Proportion="1" Flag="wx.ALL" Border="0"/>
+            </wx.GBSizerItem>
+        </wx.GridBagSizer>
+    </xobj:fragment>
+    <xobj:fragment xobj:id="fragment1">
+        <wx.Button xobj.id="button3" parent="x.Panel" label="'Label3'"/>
+    </xobj:fragment>
+</xobj:objects>
