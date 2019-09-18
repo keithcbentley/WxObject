@@ -1,0 +1,38 @@
+<xobj:objects
+        xmlns="http://namespace.xobj.org/xobj/wx"
+        xmlns:xobj="http://namespace.xobj.org/xobj">
+    <wx.Frame ui.id="main_frame" parent="None" title="'Hello World 2'">
+        <wx.StatusBar parent="x.Frame" id="1" x.Frame.StatusBar="x.StatusBar">
+            <x.StatusBar StatusText="'Welcome to Python!'"/>
+        </wx.StatusBar>
+        <wx.MenuBar x.Frame.MenuBar="x.MenuBar">
+            <xobj:include_xobj_fragment xobj_id="menubar_contents"/>
+        </wx.MenuBar>
+        <wx.Panel parent="x.Frame">
+            <xobj:include_xobj_fragment xobj_id="panel_contents"/>
+        </wx.Panel>
+    </wx.Frame>
+
+    <xobj:fragment xobj:id="menubar_contents">
+        <wx.Menu x.MenuBar.Append="*(x.Menu, '&amp;File')">
+            <wx.MenuItem ui.id="helloItem" parentMenu="None" id="1" text="'&amp;Hello...\tCtrl-H'"
+                         x.Menu.Append="x.MenuItem"/>
+            <x.Menu.Append id="wx.ID_SEPARATOR"/>
+            <x.Menu.Append ui.id="exitItem" id="wx.ID_EXIT"/>
+        </wx.Menu>
+        <wx.Menu x.MenuBar.Append="*(x.Menu, '&amp;Help')">
+            <x.Menu.Append ui.id="aboutItem" id="wx.ID_ABOUT"/>
+        </wx.Menu>
+    </xobj:fragment>
+
+    <xobj:fragment xobj:id="panel_contents">
+        <wx.StaticText parent="x.Panel" label="'Hello World!'">
+            <x.StaticText.GetFont ui.id="font" x.font.PointSize="x.font.PointSize + 10"/>
+            <x.StaticText.SetFont font="x.font.Bold()"/>
+        </wx.StaticText>
+
+        <wx.BoxSizer orient="wx.VERTICAL" x.Panel.SetSizer="x.BoxSizer">
+            <wx.SizerItem window="x.StaticText" flag="wx.TOP|wx.LEFT" border="25" x.BoxSizer.Add="x.SizerItem"/>
+        </wx.BoxSizer>
+    </xobj:fragment>
+</xobj:objects>
