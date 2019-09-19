@@ -36,6 +36,11 @@ class FrameEntryValue:
         self.real_var_name = real_var_name
         self.obj = obj
 
+    def __str__(self):
+        s = ''
+        s += self.real_var_name + '  ' + str(self.obj)
+        return s
+
 
 class Frame:
     def __init__(self):
@@ -46,11 +51,25 @@ class Frame:
         # TODO check if entry already exists.
         self.frame_entries[var_name] = FrameEntryValue(real_var_name, obj)
 
+    def __str__(self):
+        s = ''
+        s += 'Context Frame:\n'
+        for k, v in self.frame_entries.items():
+            s += k + '  ' + str(v) + '\n'
+        return s
+
 
 class Context:
     def __init__(self):
         super().__init__()
         self.frames = []
+
+    def __str__(self):
+        s = ''
+        s += 'Context:\n'
+        for frame in self.frames:
+            s += str(frame)
+        return s
 
     def push_frame(self):
         self.frames.append(Frame())
@@ -203,6 +222,8 @@ class WxObjects:
             if needs_var:
                 self.save_ui_object(self.runtime_variable_name, thing)
                 self.save_ui_object(last, thing)  # this is the 'magic' last name
+                self.context.add_entry(self.runtime_variable_name, self.runtime_variable_name, thing)
+                self.context.add_entry(last, self.runtime_variable_name, thing)
 
             self.codegen_functioncall(s, args, kwargs, needs_var)
             if needs_var:
@@ -302,11 +323,11 @@ class WxObjects:
         thing = self.xcall_attribs(prefix + '.' + name, call_attribs)
         var = self.get_replace_variable_name(name)
         self.context_push(var, thing)
-        print(self.context.frames)
+        print(self.context)
 
     def on_element_end(self, element, namespace, prefix, name):
         self.context_pop(name)
-        print(self.context.frames)
+        print(self.context)
         self.context.pop_frame()
 
 
