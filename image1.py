@@ -18,7 +18,7 @@ if __name__ == '__main__':
         own_dir = os.path.dirname(file)
         file1 = os.path.join(own_dir, 'image1.xml')
         wxobjects = wxobject.WxObjects()
-        wxobjects.output_codegen = True
+        # wxobjects.output_codegen = True
         ui1 = xobj.XobjParser(all_namespaces, wxobjects)
         app = wx.App()
 

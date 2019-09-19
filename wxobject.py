@@ -30,10 +30,43 @@ class UI:
     pass
 
 
+class FrameEntryValue:
+    def __init__(self, real_var_name, obj):
+        super().__init__()
+        self.real_var_name = real_var_name
+        self.obj = obj
+
+
+class Frame:
+    def __init__(self):
+        super().__init__()
+        self.frame_entries = {}
+
+    def add_entry(self, var_name, real_var_name, obj):
+        # TODO check if entry already exists.
+        self.frame_entries[var_name] = FrameEntryValue(real_var_name, obj)
+
+
+class Context:
+    def __init__(self):
+        super().__init__()
+        self.frames = []
+
+    def push_frame(self):
+        self.frames.append(Frame())
+
+    def pop_frame(self):
+        self.frames.pop()
+
+    def add_entry(self, var_name, real_var_name, obj):
+        self.frames[len(self.frames) - 1].add_entry(var_name, real_var_name, obj)
+
+
 class WxObjects:
     def __init__(self):
         super().__init__()
         self.ui = UI()
+        self.context = Context()
         self.current_uiid = None
         self.variable_counter = 0
         self.runtime_variable_name = None
@@ -156,6 +189,11 @@ class WxObjects:
         for k, v in kwargs.items():
             kwargs_eval[k] = self.xeval(v)
 
+        # Callers can't tell if this is a function call or property set.
+        # Always push a frame so that callers can always pop the frame.
+        # This will result in unused frames being pushed and popped but it's
+        # cleaner for now.
+        self.context.push_frame()
         funcorprop = self.xeval(s)
         part_names = s.split('.')
         last = part_names[-1]
@@ -207,6 +245,7 @@ class WxObjects:
         thing = self.xcall(s, **kwargs)
         for k, v in attribs_copy.items():
             self.xcall(k, v, needs_var=False)
+            self.context.pop_frame()
         return thing
 
     def context_push(self, value, thing):
@@ -263,9 +302,12 @@ class WxObjects:
         thing = self.xcall_attribs(prefix + '.' + name, call_attribs)
         var = self.get_replace_variable_name(name)
         self.context_push(var, thing)
+        print(self.context.frames)
 
     def on_element_end(self, element, namespace, prefix, name):
         self.context_pop(name)
+        print(self.context.frames)
+        self.context.pop_frame()
 
 
 # IMPORTANT Be sure to get the string case correct.
