@@ -2,7 +2,7 @@
         xmlns="http://namespace.xobj.org/xobj/wx"
         xmlns:xobj="http://namespace.xobj.org/xobj">
     <wx.Frame ui.id="main_frame" parent="None" title="'Hello Frame'">
-        <wx.StatusBar parent="x.Frame" id="1" x.Frame.StatusBar="x.StatusBar">
+        <wx.StatusBar parent="x.Frame" x.Frame.StatusBar="x.StatusBar">
             <x.StatusBar StatusText="'New Status'"/>
         </wx.StatusBar>
         <wx.MenuBar x.Frame.MenuBar="x.MenuBar">
@@ -11,6 +11,10 @@
         <wx.Panel parent="x.Frame">
             <xobj:include_xobj_fragment xobj_id="panel_contents"/>
         </wx.Panel>
+    </wx.Frame>
+    <wx.Frame ui.id="child_frame" parent="x.main_frame" title="'Second Frame'">
+
+
     </wx.Frame>
     <xobj:fragment xobj:id="menubar_contents">
         <wx.Menu x.MenuBar.Append="*(x.Menu, 'Menu&amp;1')">

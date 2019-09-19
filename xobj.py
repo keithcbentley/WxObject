@@ -93,9 +93,9 @@ class XobjParser:
         return self.element_tree.findall(xpath, self.all_namespaces)
 
     def process_xml_element(self, element, skip_root=False):
+        this_xobjtag = XobjTag.new_from_string(element.tag)
         if not skip_root:
-            this_xobjtag = XobjTag.new_from_string(element.tag)
-            self.xobjects.on_element(element, this_xobjtag.namespace, this_xobjtag.prefix, this_xobjtag.name)
+            self.xobjects.on_element_start(element, this_xobjtag.namespace, this_xobjtag.prefix, this_xobjtag.name)
         for child_element in element:
             child_xobjtag = XobjTag.new_from_string(child_element.tag)
             if child_xobjtag.namespace == xobj_namespace:
@@ -106,4 +106,6 @@ class XobjParser:
                     pass
             else:
                 self.process_xml_element(child_element)
+        if not skip_root:
+            self.xobjects.on_element_end(element, this_xobjtag.namespace, this_xobjtag.prefix, this_xobjtag.name)
         return

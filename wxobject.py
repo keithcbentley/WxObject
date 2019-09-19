@@ -31,8 +31,8 @@ class WxObjects:
         super().__init__()
         self.current_uiid = None
         self.variable_counter = 0
-        self.variable_name = ''
-        self.last_names = {}
+        self.runtime_variable_name = None
+        self.replace_names = {}
         self.output_codegen = False
 
         self.xenv = {
@@ -41,27 +41,31 @@ class WxObjects:
             '__builtins__': {}
         }
 
+    def set_new_runtime_variable_name(self):
+        if self.current_uiid is not None:
+            self.runtime_variable_name = self.current_uiid
+            return
+        self.runtime_variable_name = 'var{n}'.format(n=self.variable_counter)
+        self.variable_counter += 1
+        return
+
+    def set_replace_variable_name(self, name):
+        self.replace_names[name] = self.runtime_variable_name
+
+    def get_replace_variable_name(self, name):
+        if name in self.replace_names:
+            return self.replace_names[name]
+        return name
+
     def codegen_output_line(self, s):
         if self.output_codegen:
             print(s)
 
-    def codegen_set_current_variable_name(self, uiid):
-        if uiid is None:
-            self.variable_name = 'self.var{n}'.format(n=self.variable_counter)
-            self.variable_counter += 1
-            return
-        self.variable_name = 'self.' + uiid
-
     def codegen_get_current_variable_name(self):
-        return self.variable_name
-
-    def codegen_set_replace_variable_name(self, name):
-        self.last_names[name] = self.variable_name
+        return 'self.' + self.runtime_variable_name
 
     def codegen_get_replace_variable_name(self, name):
-        if name in self.last_names:
-            return self.last_names[name]
-        return 'self.' + name
+        return 'self.' + self.get_replace_variable_name(name)
 
     def codegen_xname_replacement(self, s):
         # fullx is everything that ends in x. x is just the end part.
@@ -146,25 +150,21 @@ class WxObjects:
         kwargs_eval = {}
         for k, v in kwargs.items():
             kwargs_eval[k] = self.xeval(v)
-        #        args = None
-        #        kwargs = None
 
         funcorprop = self.xeval(s)
         part_names = s.split('.')
         last = part_names[-1]
         if callable(funcorprop):
+            self.set_new_runtime_variable_name()
             thing = funcorprop(*args_eval, **kwargs_eval)
-
             if needs_var:
-                self.__setattr__(last, thing)
+                self.__setattr__(self.runtime_variable_name, thing)
+                self.__setattr__(last, thing)  # this is the 'magic' last name
 
-            self.codegen_set_current_variable_name(self.current_uiid)
             self.codegen_functioncall(s, args, kwargs, needs_var)
-            # Name updates must come AFTER function call generation so
-            # that the name replacement is correct in the function code.
             if needs_var:
-                self.codegen_set_replace_variable_name(last)
-
+                self.set_replace_variable_name(last)
+            self.current_uiid = None  # safety, make sure we don't accidentally reuse
             return thing
         # else try it as a property.
         if len(args_eval) == 0:
@@ -187,11 +187,10 @@ class WxObjects:
     def xcall_attribs(self, s, attribs):
         attribs_copy = attribs.copy()
         id_str = 'ui.id'
-        uiid = None
+        self.current_uiid = None
         if id_str in attribs_copy:
-            uiid = attribs_copy[id_str]
+            self.current_uiid = attribs_copy[id_str]
             del attribs_copy[id_str]
-        self.current_uiid = uiid
         kwargs = {}
         for k, v in attribs_copy.items():
             if k.find('.') < 0:
@@ -201,17 +200,72 @@ class WxObjects:
         for k in kwargs.keys():  # Remove undotted attributes.
             del attribs_copy[k]
         thing = self.xcall(s, **kwargs)
-        if uiid is not None:
-            self.__setattr__(uiid, thing)
         for k, v in attribs_copy.items():
             self.xcall(k, v, needs_var=False)
+        return thing
 
-    def on_element(self, element, namespace, prefix, name):
+    def context_push(self, value, thing):
+        context.append((value, thing))
+
+    def context_pop(self, name):
+        context.pop()
+
+    def context_find_nearest_instance(self, c):
+        for i in range(len(context) - 1, -1, -1):
+            if isinstance(context[i][1], c):
+                return context[i]
+        return None
+
+    def get_classname(self, c):
+        sname = str(c)
+        pattern = r""".* \'(?P<classname>.*)\'.*"""
+        result = re.match(pattern, sname)
+        if result is None:
+            return None
+        name = result['classname']
+        return name
+
+    def get_param_map(self, obj):
+        params = {}
+        if isinstance(obj, type):
+            mro = obj.mro()
+        else:
+            mro = obj.__class__.mro()
+        mro.reverse()
+        for c in mro:
+            cname = self.get_classname(c)
+            if cname in param_map:
+                param_entry = param_map[cname][0]
+                params[param_entry[0]] = param_entry[1]
+        return params
+
+    def on_element_start(self, element, namespace, prefix, name):
         #        print('Got element:', element, namespace, prefix, name)
         #        for k, v in element.attrib.items():
         #            print(k, v)
-        self.xcall_attribs(prefix + '.' + name, element.attrib)
+        call_attribs = element.attrib.copy()
+        if prefix == 'wx':
+            c = wx.__getattribute__(name)
+            param_map = self.get_param_map(c)
+            for k, v in param_map.items():
+                nearest = self.context_find_nearest_instance(v)
+                if nearest is not None:
+                    varname = nearest[0]
+                    varname = self.get_replace_variable_name(varname)
+                    varname = 'x.' + varname
+                    if k not in call_attribs:
+                        call_attribs[k] = varname
+        thing = self.xcall_attribs(prefix + '.' + name, call_attribs)
+        var = self.get_replace_variable_name(name)
+        self.context_push(var, thing)
 
+    def on_element_end(self, element, namespace, prefix, name):
+        self.context_pop(name)
+
+
+# IMPORTANT Be sure to get the string case correct.
+param_map = {'wx._core.Window': [('parent', wx.Window)]}
+context = []
 
 if __name__ == '__main__':
     def main():
