@@ -1,5 +1,5 @@
 import re
-
+import functools
 import wx
 
 
@@ -308,6 +308,18 @@ class WxObjects:
                 params[param_entry[0]] = param_entry[1]
         return params
 
+    def get_post_call(self, obj):
+        if isinstance(obj, type):
+            mro = obj.mro()
+        else:
+            mro = obj.__class__.mro()
+        mro.reverse()
+        for c in mro:
+            cname = self.get_classname(c)
+            if cname in post_call_map:
+                return post_call_map[cname]
+        return None
+
     def on_element_start(self, element, namespace, prefix, name):
         #        print('Got element:', element, namespace, prefix, name)
         #        for k, v in element.attrib.items():
@@ -315,16 +327,21 @@ class WxObjects:
         call_attribs = element.attrib.copy()
         if prefix == 'wx':
             c = wx.__getattribute__(name)
-            dump('class:', c)
             param_map = self.get_param_map(c)
             for k, v in param_map.items():
-                nearest1 = self.context.find_nearest_instance(v)
-                if nearest1 is not None:
-                    varname = 'x.' + nearest1.real_var_name
+                nearest = self.context.find_nearest_instance(v)
+                if nearest is not None:
+                    varname = 'x.' + nearest.real_var_name
                     if k not in call_attribs:
-                        print('substitute:', k, varname)
                         call_attribs[k] = varname
         thing = self.xcall_attribs(prefix + '.' + name, call_attribs)
+        if prefix == 'wx':
+            post_call = self.get_post_call(thing)
+            if post_call is not None:
+                f, c = post_call
+                nearest1 = self.context.find_nearest_instance(c)
+                if nearest1 is not None:
+                    f(nearest1.obj, thing)
 
     #        dump('thing:', thing)
     #        var = self.context.get_real_variable_name(name)
@@ -334,7 +351,11 @@ class WxObjects:
 
 
 # IMPORTANT Be sure to get the string case correct.
+# class: [(param, param_class)]
+# if you are an instance of class, use the closest instance of param_class as
+# the argument for param.  (If param is not explicitly specified in the attribute list.
 param_map = {'wx._core.Window': [('parent', wx.Window)]}
+post_call_map = {'wx._core.SizerItem': (wx.Sizer.Add, wx.Sizer)}
 
 if __name__ == '__main__':
     def main():

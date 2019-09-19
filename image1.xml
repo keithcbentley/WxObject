@@ -8,13 +8,10 @@
             <wx.Button label="'Browse'"/>
             <wx.TextCtrl size="(200,-1)"/>
             <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.Panel.SetSizer="x.BoxSizer">
-                <wx.SizerItem window="x.StaticBitmap" proportion="0" flag="wx.ALL" border="5"
-                              x.main_sizer.Add="x.SizerItem"/>
+                <wx.SizerItem window="x.StaticBitmap" proportion="0" flag="wx.ALL" border="5"/>
                 <wx.BoxSizer ui.id="h_sizer" orient="wx.HORIZONTAL" x.main_sizer.Add="x.h_sizer">
-                    <wx.SizerItem window="x.Button" proportion="0" flag="wx.ALL" border="5"
-                                  x.h_sizer.Add="x.SizerItem"/>
-                    <wx.SizerItem window="x.TextCtrl" proportion="0" flag="wx.ALL" border="7"
-                                  x.h_sizer.Add="x.SizerItem"/>
+                    <wx.SizerItem window="x.Button" proportion="0" flag="wx.ALL" border="5"/>
+                    <wx.SizerItem window="x.TextCtrl" proportion="0" flag="wx.ALL" border="7"/>
                 </wx.BoxSizer>
                 <x.main_sizer.Fit window="x.Frame"/>
             </wx.BoxSizer>
