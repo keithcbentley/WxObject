@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
         ui1.instantiate_from_file(file1)
 
-        wxobjects.main_frame.Show()
+        wxobjects.ui.main_frame.Show()
         app.MainLoop()
 
 

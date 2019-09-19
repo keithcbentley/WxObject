@@ -26,9 +26,14 @@ def dump(h, obj):
                 print('    ', k, '--->>>', v, 'type: ', type(v))
 
 
+class UI:
+    pass
+
+
 class WxObjects:
     def __init__(self):
         super().__init__()
+        self.ui = UI()
         self.current_uiid = None
         self.variable_counter = 0
         self.runtime_variable_name = None
@@ -37,7 +42,7 @@ class WxObjects:
 
         self.xenv = {
             'wx': wx,
-            'x': self,
+            'x': self.ui,
             '__builtins__': {}
         }
 
@@ -134,8 +139,8 @@ class WxObjects:
         )
         self.codegen_output_line(property_string)
 
-    def save_object(self, name, obj):
-        self.__setattr__(name, obj)
+    def save_ui_object(self, name, obj):
+        self.ui.__setattr__(name, obj)
 
     def xeval(self, s):
         return eval(s, self.xenv, {})
@@ -158,8 +163,8 @@ class WxObjects:
             self.set_new_runtime_variable_name()
             thing = funcorprop(*args_eval, **kwargs_eval)
             if needs_var:
-                self.__setattr__(self.runtime_variable_name, thing)
-                self.__setattr__(last, thing)  # this is the 'magic' last name
+                self.save_ui_object(self.runtime_variable_name, thing)
+                self.save_ui_object(last, thing)  # this is the 'magic' last name
 
             self.codegen_functioncall(s, args, kwargs, needs_var)
             if needs_var:
@@ -172,14 +177,14 @@ class WxObjects:
             # The entire function string is the object.
             for k, v in kwargs_eval.items():
                 obj = self.xeval(s)
-                obj.__setattr__(k, v)
+                obj.__setattr__(k, v)  # Set the property on the object itself, not the ui object.
                 self.codegen_property(s, k, kwargs[k])
         else:
             # Got positional arg so assume property value is the first positional arg.
             # The object is the first part of the function string and the property s is the last part.
             objstr = '.'.join(part_names[0:-1])
             obj = self.xeval(objstr)
-            obj.__setattr__(last, args_eval[0])
+            obj.__setattr__(last, args_eval[0])  # Set the property on the object itself, not the ui object.
             self.codegen_property(objstr, last, args[0])
 
         return None  # TODO: is there anything more useful to return?
