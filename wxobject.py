@@ -47,16 +47,22 @@ class Frame:
         super().__init__()
         self.frame_entries = {}
 
-    def add_entry(self, var_name, real_var_name, obj):
-        # TODO check if entry already exists.
-        self.frame_entries[var_name] = FrameEntryValue(real_var_name, obj)
-
     def __str__(self):
         s = ''
         s += 'Context Frame:\n'
         for k, v in self.frame_entries.items():
             s += k + '  ' + str(v) + '\n'
         return s
+
+    def add_entry(self, var_name, real_var_name, obj):
+        # TODO check if entry already exists.
+        self.frame_entries[var_name] = FrameEntryValue(real_var_name, obj)
+
+    def get_matching_instance(self, c):
+        for k, v in self.frame_entries.items():
+            if isinstance(v.obj, c):
+                return self.frame_entries[k]
+        return None
 
 
 class Context:
@@ -91,6 +97,13 @@ class Context:
         if real_name is not None:
             return real_name
         return name
+
+    def find_nearest_instance(self, c):
+        for i in range(len(self.frames) - 1, -1, -1):
+            matching_instance = self.frames[i].get_matching_instance(c)
+            if matching_instance is not None:
+                return matching_instance
+        return None
 
 
 class WxObjects:
@@ -272,18 +285,6 @@ class WxObjects:
             self.context.pop_frame()
         return thing
 
-    def context_push(self, value, thing):
-        context.append((value, thing))
-
-    def context_pop(self, name):
-        context.pop()
-
-    def context_find_nearest_instance(self, c):
-        for i in range(len(context) - 1, -1, -1):
-            if isinstance(context[i][1], c):
-                return context[i]
-        return None
-
     def get_classname(self, c):
         sname = str(c)
         pattern = r""".* \'(?P<classname>.*)\'.*"""
@@ -314,30 +315,26 @@ class WxObjects:
         call_attribs = element.attrib.copy()
         if prefix == 'wx':
             c = wx.__getattribute__(name)
+            dump('class:', c)
             param_map = self.get_param_map(c)
             for k, v in param_map.items():
-                nearest = self.context_find_nearest_instance(v)
-                if nearest is not None:
-                    varname = nearest[0]
-                    varname = self.context.get_real_variable_name(varname)
-                    varname = 'x.' + varname
+                nearest1 = self.context.find_nearest_instance(v)
+                if nearest1 is not None:
+                    varname = 'x.' + nearest1.real_var_name
                     if k not in call_attribs:
+                        print('substitute:', k, varname)
                         call_attribs[k] = varname
         thing = self.xcall_attribs(prefix + '.' + name, call_attribs)
-        var = self.context.get_real_variable_name(name)
-        self.context_push(var, thing)
 
-    #        print(self.context)
+    #        dump('thing:', thing)
+    #        var = self.context.get_real_variable_name(name)
 
     def on_element_end(self, element, namespace, prefix, name):
-        self.context_pop(name)
-        #        print(self.context)
         self.context.pop_frame()
 
 
 # IMPORTANT Be sure to get the string case correct.
 param_map = {'wx._core.Window': [('parent', wx.Window)]}
-context = []
 
 if __name__ == '__main__':
     def main():
