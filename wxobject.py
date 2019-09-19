@@ -80,6 +80,18 @@ class Context:
     def add_entry(self, var_name, real_var_name, obj):
         self.frames[len(self.frames) - 1].add_entry(var_name, real_var_name, obj)
 
+    def lookup_real_variable_name(self, name):
+        for i in range(len(self.frames) - 1, -1, -1):
+            if name in self.frames[i].frame_entries:
+                return self.frames[i].frame_entries[name].real_var_name
+        return None
+
+    def get_real_variable_name(self, name):
+        real_name = self.lookup_real_variable_name(name)
+        if real_name is not None:
+            return real_name
+        return name
+
 
 class WxObjects:
     def __init__(self):
@@ -89,7 +101,6 @@ class WxObjects:
         self.current_uiid = None
         self.variable_counter = 0
         self.runtime_variable_name = None
-        self.replace_names = {}
         self.output_codegen = False
 
         self.xenv = {
@@ -106,14 +117,6 @@ class WxObjects:
         self.variable_counter += 1
         return
 
-    def set_replace_variable_name(self, name):
-        self.replace_names[name] = self.runtime_variable_name
-
-    def get_replace_variable_name(self, name):
-        if name in self.replace_names:
-            return self.replace_names[name]
-        return name
-
     def codegen_output_line(self, s):
         if self.output_codegen:
             print(s)
@@ -122,7 +125,7 @@ class WxObjects:
         return 'self.' + self.runtime_variable_name
 
     def codegen_get_replace_variable_name(self, name):
-        return 'self.' + self.get_replace_variable_name(name)
+        return 'self.' + self.context.get_real_variable_name(name)
 
     def codegen_xname_replacement(self, s):
         # fullx is everything that ends in x. x is just the end part.
@@ -226,8 +229,8 @@ class WxObjects:
                 self.context.add_entry(last, self.runtime_variable_name, thing)
 
             self.codegen_functioncall(s, args, kwargs, needs_var)
-            if needs_var:
-                self.set_replace_variable_name(last)
+            #            if needs_var:
+            #                self.set_replace_variable_name(last)
             self.current_uiid = None  # safety, make sure we don't accidentally reuse
             return thing
         # else try it as a property.
@@ -316,18 +319,19 @@ class WxObjects:
                 nearest = self.context_find_nearest_instance(v)
                 if nearest is not None:
                     varname = nearest[0]
-                    varname = self.get_replace_variable_name(varname)
+                    varname = self.context.get_real_variable_name(varname)
                     varname = 'x.' + varname
                     if k not in call_attribs:
                         call_attribs[k] = varname
         thing = self.xcall_attribs(prefix + '.' + name, call_attribs)
-        var = self.get_replace_variable_name(name)
+        var = self.context.get_real_variable_name(name)
         self.context_push(var, thing)
-        print(self.context)
+
+    #        print(self.context)
 
     def on_element_end(self, element, namespace, prefix, name):
         self.context_pop(name)
-        print(self.context)
+        #        print(self.context)
         self.context.pop_frame()
 
 
