@@ -354,6 +354,7 @@ class WxObjects:
                             call_attribs[param_name] = varname
         xcall_result = self.xcall_attribs(prefix + '.' + name, call_attribs)
         if xcall_result is not None:
+            dump('thing:', xcall_result.result)
             post_call = self.get_post_call(xcall_result.result)
             if post_call is not None:
                 fname, c = post_call
@@ -368,12 +369,26 @@ class WxObjects:
 
 
 # IMPORTANT Be sure to get the string case correct.
-# class: [(param, param_class)]
-# if you are an instance of class, use the closest instance of param_class as
+# wxPython uses a wrapper around the _core class.
+# Getting an object's class name programmatically returns
+# wx._core.name so in the tables below, you have to use this
+# name for the class name string.  In the Python code itself,
+# the class can be referenced as wx.name since Python handles the wrapper.
+# class_name: [(param, param_class)]
+# If you are an instance of class, use the closest instance of param_class as
 # the argument for param.  (If param is not explicitly specified in the attribute list.
+# Use None for param_class to disable the attribute.
 param_map = {'wx._core.Window': [('parent', wx.Window)],
              'wx._core.MenuBar': [('parent', None)]
              }
+# class_name: (method_name, target_class)
+# method_name is a single argument method in the target_class
+# If you are an instance of class_name, call method_name
+# on the nearest instance of target_object_class with yourself
+# # as the argument i.e.,
+#       target_class instance.method_name(class_name instance)
+# internally, it's actually called as
+#       method_name(target_class instance, class_name instance)
 post_call_map = {
     'wx._core.StatusBar': ('wx.Frame.SetStatusBar', wx.Frame),
     'wx._core.MenuBar': ('wx.Frame.SetMenuBar', wx.Frame),
