@@ -143,7 +143,7 @@ class WxObjects:
     def codegen_xname_replacement(self, s):
         # fullx is everything that ends in x. x is just the end part.
         # If they are the same, it's a single x.name
-        pattern = r"""(?P<fullx>[a-zA-z]*(?P<x>x\.(?P<name>[a-zA-Z_]+)))"""
+        pattern = r"""(?P<fullx>[a-zA-z0-9_]*(?P<x>x\.(?P<name>[a-zA-Z0-9_]+)))"""
         new = ''
         remainder = s
         while True:
@@ -213,6 +213,12 @@ class WxObjects:
     def xeval(self, s):
         return eval(s, self.xenv, {})
 
+    class XCallResult:
+        def __init__(self, real_var_name, result):
+            super().__init__()
+            self.real_var_name = real_var_name
+            self.result = result
+
     def xcall(self, s, *args, needs_var=True, **kwargs):
         args_eval = ()
         for a in args:
@@ -245,7 +251,7 @@ class WxObjects:
             #            if needs_var:
             #                self.set_replace_variable_name(last)
             self.current_uiid = None  # safety, make sure we don't accidentally reuse
-            return thing
+            return self.XCallResult(self.runtime_variable_name, thing)
         # else try it as a property.
         if len(args_eval) == 0:
             # No positional args, so multiple properties are in the kwargs.
@@ -254,14 +260,13 @@ class WxObjects:
                 obj = self.xeval(s)
                 obj.__setattr__(k, v)  # Set the property on the object itself, not the ui object.
                 self.codegen_property(s, k, kwargs[k])
-        else:
-            # Got positional arg so assume property value is the first positional arg.
-            # The object is the first part of the function string and the property s is the last part.
-            objstr = '.'.join(part_names[0:-1])
-            obj = self.xeval(objstr)
-            obj.__setattr__(last, args_eval[0])  # Set the property on the object itself, not the ui object.
-            self.codegen_property(objstr, last, args[0])
-
+            return None
+        # Got positional arg so assume property value is the first positional arg.
+        # The object is the first part of the function string and the property s is the last part.
+        objstr = '.'.join(part_names[0:-1])
+        obj = self.xeval(objstr)
+        obj.__setattr__(last, args_eval[0])  # Set the property on the object itself, not the ui object.
+        self.codegen_property(objstr, last, args[0])
         return None  # TODO: is there anything more useful to return?
 
     def xcall_attribs(self, s, attribs):
@@ -279,11 +284,11 @@ class WxObjects:
                 pass  # It's a dotted attribute to process after.
         for k in kwargs.keys():  # Remove undotted attributes.
             del attribs_copy[k]
-        thing = self.xcall(s, **kwargs)
+        xcall_result = self.xcall(s, **kwargs)
         for k, v in attribs_copy.items():
             self.xcall(k, v, needs_var=False)
             self.context.pop_frame()
-        return thing
+        return xcall_result
 
     def get_classname(self, c):
         sname = str(c)
@@ -334,17 +339,15 @@ class WxObjects:
                     varname = 'x.' + nearest.real_var_name
                     if k not in call_attribs:
                         call_attribs[k] = varname
-        thing = self.xcall_attribs(prefix + '.' + name, call_attribs)
-        if prefix == 'wx':
-            post_call = self.get_post_call(thing)
+        xcall_result = self.xcall_attribs(prefix + '.' + name, call_attribs)
+        if xcall_result is not None:
+            post_call = self.get_post_call(xcall_result.result)
             if post_call is not None:
-                f, c = post_call
+                fname, c = post_call
                 nearest1 = self.context.find_nearest_instance(c)
                 if nearest1 is not None:
-                    f(nearest1.obj, thing)
-
-    #        dump('thing:', thing)
-    #        var = self.context.get_real_variable_name(name)
+                    # Need to use xcall mechanism so that code is generated for the call.
+                    self.xcall(fname, 'x.' + nearest1.real_var_name, 'x.' + xcall_result.real_var_name)
 
     def on_element_end(self, element, namespace, prefix, name):
         self.context.pop_frame()
@@ -355,7 +358,7 @@ class WxObjects:
 # if you are an instance of class, use the closest instance of param_class as
 # the argument for param.  (If param is not explicitly specified in the attribute list.
 param_map = {'wx._core.Window': [('parent', wx.Window)]}
-post_call_map = {'wx._core.SizerItem': (wx.Sizer.Add, wx.Sizer)}
+post_call_map = {'wx._core.SizerItem': ('wx.Sizer.Add', wx.Sizer)}
 
 if __name__ == '__main__':
     def main():
