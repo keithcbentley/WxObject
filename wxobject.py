@@ -1,6 +1,11 @@
+from typing import *
 import re
-import functools
 import wx
+
+AnyVarName = NewType('AnyVarName', str)
+RealVarName = NewType('RealVarName', AnyVarName)
+UsableVarName = NewType('UsableVarName', str)
+CodegenVarName = NewType('CodegenVarName', str)
 
 
 def dump(h, obj):
@@ -31,7 +36,7 @@ class UI:
 
 
 class FrameEntryValue:
-    def __init__(self, real_var_name, obj):
+    def __init__(self, real_var_name: RealVarName, obj):
         super().__init__()
         self.real_var_name = real_var_name
         self.obj = obj
@@ -54,11 +59,11 @@ class Frame:
             s += k + '  ' + str(v) + '\n'
         return s
 
-    def add_entry(self, var_name, real_var_name, obj):
+    def add_entry(self, var_name: AnyVarName, real_var_name: RealVarName, obj):
         # TODO check if entry already exists.
         self.frame_entries[var_name] = FrameEntryValue(real_var_name, obj)
 
-    def get_matching_instance(self, c):
+    def get_matching_instance(self, c) -> Optional[FrameEntryValue]:
         for k, v in self.frame_entries.items():
             if isinstance(v.obj, c):
                 return self.frame_entries[k]
@@ -83,10 +88,10 @@ class Context:
     def pop_frame(self):
         self.frames.pop()
 
-    def add_entry(self, var_name, real_var_name, obj):
+    def add_entry(self, var_name: AnyVarName, real_var_name: RealVarName, obj):
         self.frames[len(self.frames) - 1].add_entry(var_name, real_var_name, obj)
 
-    def lookup_real_variable_name(self, name):
+    def lookup_real_variable_name(self, name: AnyVarName) -> Optional[RealVarName]:
         for i in range(len(self.frames) - 1, -1, -1):
             if name in self.frames[i].frame_entries:
                 return self.frames[i].frame_entries[name].real_var_name
@@ -107,13 +112,13 @@ class Context:
 
 
 class WxObjects:
-    def __init__(self):
+    def __init__(self, ui: UI):
         super().__init__()
-        self.ui = UI()
+        self.ui = ui
         self.context = Context()
-        self.current_uiid = None
+        self.current_uiid: RealVarName = None
         self.variable_counter = 0
-        self.runtime_variable_name = None
+        self.runtime_variable_name: RealVarName = None
         self.output_codegen = False
 
         self.xenv = {
@@ -122,25 +127,24 @@ class WxObjects:
             '__builtins__': {}
         }
 
-    def set_new_runtime_variable_name(self):
+    def set_new_runtime_variable_name(self) -> None:
         if self.current_uiid is not None:
             self.runtime_variable_name = self.current_uiid
             return
         self.runtime_variable_name = 'var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
-        return
 
-    def codegen_output_line(self, s):
+    def codegen_output_line(self, s) -> None:
         if self.output_codegen:
             print(s)
 
-    def codegen_get_current_variable_name(self):
+    def codegen_get_current_variable_name(self) -> CodegenVarName:
         return 'self.' + self.runtime_variable_name
 
-    def codegen_get_replace_variable_name(self, name):
+    def codegen_get_replace_variable_name(self, name) -> CodegenVarName:
         return 'self.' + self.context.get_real_variable_name(name)
 
-    def codegen_xname_replacement(self, s):
+    def codegen_xname_replacement(self, s: str) -> str:
         # fullx is everything that ends in x. x is just the end part.
         # If they are the same, it's a single x.name
         pattern = r"""(?P<fullx>[a-zA-z0-9_]*(?P<x>x\.(?P<name>[a-zA-Z0-9_]+)))"""
@@ -305,12 +309,17 @@ class WxObjects:
             mro = obj.mro()
         else:
             mro = obj.__class__.mro()
+        # Scan classes in reverse order so that derived classes
+        # can override base classes.
         mro.reverse()
         for c in mro:
             cname = self.get_classname(c)
             if cname in param_map:
+                # TODO use a class/type here to clean up naming.
                 param_entry = param_map[cname][0]
-                params[param_entry[0]] = param_entry[1]
+                param_name = param_entry[0]
+                param_value = param_entry[1]
+                params[param_name] = param_value
         return params
 
     def get_post_call(self, obj):
@@ -319,11 +328,14 @@ class WxObjects:
         else:
             mro = obj.__class__.mro()
         mro.reverse()
+        post_call = None
+        # Scan classes in reverse order so that derived classes
+        # can override base classes.
         for c in mro:
             cname = self.get_classname(c)
             if cname in post_call_map:
-                return post_call_map[cname]
-        return None
+                post_call = post_call_map[cname]
+        return post_call
 
     def on_element_start(self, element, namespace, prefix, name):
         #        print('Got element:', element, namespace, prefix, name)
@@ -333,12 +345,13 @@ class WxObjects:
         if prefix == 'wx':
             c = wx.__getattribute__(name)
             param_map = self.get_param_map(c)
-            for k, v in param_map.items():
-                nearest = self.context.find_nearest_instance(v)
-                if nearest is not None:
-                    varname = 'x.' + nearest.real_var_name
-                    if k not in call_attribs:
-                        call_attribs[k] = varname
+            for param_name, target_class in param_map.items():
+                if target_class is not None:  # param map uses None to disable attribute
+                    nearest = self.context.find_nearest_instance(target_class)
+                    if nearest is not None:
+                        varname = 'x.' + nearest.real_var_name
+                        if param_name not in call_attribs:
+                            call_attribs[param_name] = varname
         xcall_result = self.xcall_attribs(prefix + '.' + name, call_attribs)
         if xcall_result is not None:
             post_call = self.get_post_call(xcall_result.result)
@@ -348,6 +361,7 @@ class WxObjects:
                 if nearest1 is not None:
                     # Need to use xcall mechanism so that code is generated for the call.
                     self.xcall(fname, 'x.' + nearest1.real_var_name, 'x.' + xcall_result.real_var_name)
+                    self.context.pop_frame()
 
     def on_element_end(self, element, namespace, prefix, name):
         self.context.pop_frame()
@@ -357,13 +371,27 @@ class WxObjects:
 # class: [(param, param_class)]
 # if you are an instance of class, use the closest instance of param_class as
 # the argument for param.  (If param is not explicitly specified in the attribute list.
-param_map = {'wx._core.Window': [('parent', wx.Window)]}
-post_call_map = {'wx._core.SizerItem': ('wx.Sizer.Add', wx.Sizer)}
+param_map = {'wx._core.Window': [('parent', wx.Window)],
+             'wx._core.MenuBar': [('parent', None)]
+             }
+post_call_map = {
+    'wx._core.StatusBar': ('wx.Frame.SetStatusBar', wx.Frame),
+    'wx._core.MenuBar': ('wx.Frame.SetMenuBar', wx.Frame),
+    'wx._core.MenuItem': ('wx.Menu.Append', wx.Menu),
+    'wx._core.SizerItem': ('wx.Sizer.Add', wx.Sizer),
+    'wx._core.GBSizerItem': ('wx.GridBagSizer.Add', wx.GridBagSizer)}
 
 if __name__ == '__main__':
+    class ThisUi(UI):
+        def __init__(self):
+            super().__init__()
+            self.main_window = None
+
+
     def main():
         app = wx.App(redirect=False)
-        xobjects = WxObjects()
+        ui = ThisUi()
+        xobjects = WxObjects(ui)
         xobjects.output_codegen = True
 
         # BEGIN FRAME

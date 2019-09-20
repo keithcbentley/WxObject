@@ -12,21 +12,29 @@ all_namespaces = {'': wx_namespace,
                   }
 
 if __name__ == '__main__':
+    class ThisUi(wxobject.UI):
+        def __init__(self):
+            super().__init__()
+            self.main_frame = None
+            self.child_frame = None
+
+
     def main():
         my_module = sys.modules[__name__]
         file = my_module.__file__
         own_dir = os.path.dirname(file)
         file1 = os.path.join(own_dir, 'wx1.xml')
-        file2 = os.path.join(own_dir, 'wx2.xml')
-        wxobjects1 = wxobject.WxObjects()
+#        file2 = os.path.join(own_dir, 'wx2.xml')
+        ui = ThisUi()
+        wxobjects1 = wxobject.WxObjects(ui)
         # xobjects.output_codegen = True
-        ui1 = xobj.XobjParser(all_namespaces, wxobjects1)
+        xobj_parser = xobj.XobjParser(all_namespaces, wxobjects1)
         app = wx.App()
 
-        ui1.instantiate_from_file(file1)
+        xobj_parser.instantiate_from_file(file1)
 
-        wxobjects1.main_frame.Show()
-        wxobjects1.child_frame.Show()
+        ui.main_frame.Show()
+        ui.child_frame.Show()
         app.MainLoop()
 
 

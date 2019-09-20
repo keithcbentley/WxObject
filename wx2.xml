@@ -30,13 +30,13 @@
         <xobj:include_xobj_fragment xobj_id="fragment1"/>
         <wx.GridBagSizer vgap="0" hgap="0" x.Panel.Sizer="x.GridBagSizer">
             <x.GridBagSizer HGap="0" VGap="0"/>
-            <wx.GBSizerItem window="x.button1" pos="(0,0)" x.GridBagSizer.Add="x.GBSizerItem">
+            <wx.GBSizerItem window="x.button1" pos="(0,0)">
                 <x.GBSizerItem Proportion="1" Flag="wx.ALL | wx.CENTER" Border="0"/>
             </wx.GBSizerItem>
-            <wx.GBSizerItem window="x.button2" pos="(1,1)" x.GridBagSizer.Add="x.GBSizerItem">
+            <wx.GBSizerItem window="x.button2" pos="(1,1)">
                 <x.GBSizerItem Proportion="1" Flag="wx.ALL" Border="0"/>
             </wx.GBSizerItem>
-            <wx.GBSizerItem window="x.button3" pos="(2,2)" x.GridBagSizer.Add="x.GBSizerItem">
+            <wx.GBSizerItem window="x.button3" pos="(2,2)">
                 <x.GBSizerItem Proportion="1" Flag="wx.ALL" Border="0"/>
             </wx.GBSizerItem>
         </wx.GridBagSizer>
