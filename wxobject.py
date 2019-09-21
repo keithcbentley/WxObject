@@ -1,4 +1,4 @@
-from typing import NewType, Optional
+from typing import NewType, Optional, Type, Iterable
 from re import search as re_search, match as re_match
 import wx
 
@@ -42,8 +42,21 @@ class FrameEntry:
         self.real_var_name = real_var_name
         self.obj = obj
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.real_var_name + '  ' + str(self.obj)
+
+
+class FrameMatchingInstanceResult:
+    def __init__(self, clazz: Type, frame_entry: FrameEntry):
+        super().__init__()
+        self.clazz = clazz
+        self.frame_entry = frame_entry
+
+    def __str__(self) -> str:
+        self_str = ''
+        self_str += str(self.clazz)
+        self_str += ' ' + str(self.frame_entry)
+        return self_str
 
 
 class Frame:
@@ -51,22 +64,22 @@ class Frame:
         super().__init__()
         self.frame_entries = {}
 
-    def __str__(self):
+    def __str__(self) -> str:
         self_str = ''
         self_str += 'Context Frame:\n'
         for key, val in self.frame_entries.items():
             self_str += key + '  ' + str(val) + '\n'
         return self_str
 
-    def add_entry(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj):
+    def add_entry(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj) -> None:
         # TODO check if entry already exists.
         self.frame_entries[any_var_name] = FrameEntry(any_var_name, real_var_name, obj)
 
-    def get_matching_instance(self, clazzes) -> Optional[FrameEntry]:
+    def find_matching_instance(self, clazzes: Iterable[Type]) -> Optional[FrameMatchingInstanceResult]:
         for name, frame_entry in self.frame_entries.items():
             for clazz in clazzes:
                 if isinstance(frame_entry.obj, clazz):
-                    return frame_entry
+                    return FrameMatchingInstanceResult(clazz, frame_entry)
         return None
 
 
@@ -75,7 +88,7 @@ class Context:
         super().__init__()
         self.frames = []
 
-    def __str__(self):
+    def __str__(self) -> str:
         self_str = ''
         self_str += 'Context:\n'
         for frame in self.frames:
@@ -105,11 +118,15 @@ class Context:
         # TODO at some point, we need to validate that these are real variable names and signal an error otherwise.
         return name
 
-    def find_nearest_instance(self, clazzes):
-        for i in range(len(self.frames) - 1, -1, -1):
-            matching_instance = self.frames[i].get_matching_instance(clazzes)
-            if matching_instance is not None:
-                return matching_instance
+    def find_nearest_instance(self, clazzes: Iterable[Type], skip_current=False) -> Optional[
+        FrameMatchingInstanceResult]:
+        start_index = len(self.frames) - 1
+        if skip_current:
+            start_index -= 1
+        for i in range(start_index, -1, -1):
+            frame_matching_instance_result = self.frames[i].find_matching_instance(clazzes)
+            if frame_matching_instance_result is not None:
+                return frame_matching_instance_result
         return None
 
 
@@ -337,14 +354,14 @@ class WxObjects:
         else:
             mro = obj.__class__.mro()
         mro.reverse()
-        post_call = None
+        post_calls = None
         # Scan classes in reverse order so that derived classes
         # can override base classes.
-        for c in mro:
-            cname = self.get_classname(c)
-            if cname in post_call_map:
-                post_call = post_call_map[cname]
-        return post_call
+        for clazz in mro:
+            class_name = self.get_classname(clazz)
+            if class_name in post_call_map:
+                post_calls = post_call_map[class_name]
+        return post_calls
 
     def on_element_start(self, element, namespace, prefix, name):
         #        print('Got element:', element, namespace, prefix, name)
@@ -356,21 +373,29 @@ class WxObjects:
             param_map = self.get_param_map(c)
             for param_name, target_class in param_map.items():
                 if target_class is not None:  # param map uses None to disable attribute
-                    nearest = self.context.find_nearest_instance((target_class,))
-                    if nearest is not None:
-                        varname = 'x.' + nearest.real_var_name
+                    nearest_matching_result = self.context.find_nearest_instance((target_class,))
+                    if nearest_matching_result is not None:
+                        varname = 'x.' + nearest_matching_result.frame_entry.real_var_name
                         if param_name not in call_attribs:
                             call_attribs[param_name] = varname
         xcall_result = self.xcall_attribs(prefix + '.' + name, call_attribs)
         if xcall_result is not None:
-            dump('result:', xcall_result.result)
-            post_call = self.get_post_call(xcall_result.result)
-            if post_call is not None:
-                fname, clazz = post_call
-                nearest1 = self.context.find_nearest_instance((clazz,))
-                if nearest1 is not None:
+            post_calls = self.get_post_call(xcall_result.result)
+            if post_calls is not None:
+                classes = ()
+                for post_call in post_calls:
+                    classes += (post_call.clazz,)
+                nearest_matching_result = self.context.find_nearest_instance(classes, skip_current=True)
+                if nearest_matching_result is not None:
+                    function_name = None
+                    for post_call in post_calls:
+                        if nearest_matching_result.clazz == post_call.clazz:
+                            function_name = post_call.function_name
                     # Need to use xcall mechanism so that code is generated for the call.
-                    self.xcall(fname, 'x.' + nearest1.real_var_name, 'x.' + xcall_result.real_var_name)
+                    self.xcall(
+                        function_name,
+                        'x.' + nearest_matching_result.frame_entry.real_var_name,
+                        'x.' + xcall_result.real_var_name)
                     self.context.pop_frame()
 
     def on_element_end(self, element, namespace, prefix, name):
@@ -390,6 +415,8 @@ class WxObjects:
 param_map = {'wx._core.Window': [('parent', wx.Window)],
              'wx._core.MenuBar': [('parent', None)]
              }
+
+
 # class_name: (method_name, target_class)
 # method_name is a single argument method in the target_class
 # If you are an instance of class_name, call method_name
@@ -398,12 +425,21 @@ param_map = {'wx._core.Window': [('parent', wx.Window)],
 #       target_class instance.method_name(class_name instance)
 # internally, it's actually called as
 #       method_name(target_class instance, class_name instance)
+class PostCall:
+    def __init__(self, function_name: str, clazz: Type):
+        super().__init__()
+        self.function_name = function_name
+        self.clazz = clazz
+
+
 post_call_map = {
-    'wx._core.StatusBar': ('wx.Frame.SetStatusBar', wx.Frame),
-    'wx._core.MenuBar': ('wx.Frame.SetMenuBar', wx.Frame),
-    'wx._core.MenuItem': ('wx.Menu.Append', wx.Menu),
-    'wx._core.SizerItem': ('wx.Sizer.Add', wx.Sizer),
-    'wx._core.GBSizerItem': ('wx.GridBagSizer.Add', wx.GridBagSizer)}
+    'wx._core.StatusBar': [PostCall('wx.Frame.SetStatusBar', wx.Frame)],
+    'wx._core.MenuBar': [PostCall('wx.Frame.SetMenuBar', wx.Frame)],
+    'wx._core.MenuItem': [PostCall('wx.Menu.Append', wx.Menu)],
+    'wx._core.SizerItem': [PostCall('wx.Sizer.Add', wx.Sizer)],
+    'wx._core.Sizer': [PostCall('wx.Window.SetSizer', wx.Window), PostCall('wx.Sizer.Add', wx.Sizer)],
+    'wx._core.GBSizerItem': [PostCall('wx.GridBagSizer.Add', wx.GridBagSizer)]
+}
 
 if __name__ == '__main__':
     class ThisUi(UI):

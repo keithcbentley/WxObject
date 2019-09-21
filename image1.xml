@@ -7,9 +7,9 @@
             <wx.StaticBitmap bitmap="wx.Bitmap(x.image)"/>
             <wx.Button label="'Browse'"/>
             <wx.TextCtrl size="(200,-1)"/>
-            <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.Panel.SetSizer="x.BoxSizer">
+            <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL">
                 <wx.SizerItem window="x.StaticBitmap" proportion="0" flag="wx.ALL" border="5"/>
-                <wx.BoxSizer ui.id="h_sizer" orient="wx.HORIZONTAL" x.main_sizer.Add="x.h_sizer">
+                <wx.BoxSizer ui.id="h_sizer" orient="wx.HORIZONTAL">
                     <wx.SizerItem window="x.Button" proportion="0" flag="wx.ALL" border="5"/>
                     <wx.SizerItem window="x.TextCtrl" proportion="0" flag="wx.ALL" border="7"/>
                 </wx.BoxSizer>
