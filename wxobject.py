@@ -1,5 +1,5 @@
-from typing import *
-import re
+from typing import NewType, Optional
+from re import search as re_search, match as re_match
 import wx
 
 AnyVarName = NewType('AnyVarName', str)
@@ -8,43 +8,42 @@ UsableVarName = NewType('UsableVarName', str)
 CodegenVarName = NewType('CodegenVarName', str)
 
 
-def dump(h, obj):
-    print(h)
+def dump(header, obj):
+    print(header)
     print(obj)
     print('self:')
-    for k, v in obj.__dict__.items():
-        if k == '__doc__':
+    for key, val in obj.__dict__.items():
+        if key == '__doc__':
             pass
         else:
-            print('  ', k, '--->>>', v, 'type: ', type(v))
+            print('  ', key, '--->>>', val, 'type: ', type(val))
     # If obj is a type, call mro on it directly.
     if isinstance(obj, type):
         mro = obj.mro()
     else:
         mro = obj.__class__.mro()
-    for c in mro:
-        print('  c: ', c)
-        for k, v in c.__dict__.items():
-            if k == '__doc__':
+    for clazz in mro:
+        print('  c: ', clazz)
+        for key, val in clazz.__dict__.items():
+            if key == '__doc__':
                 pass
             else:
-                print('    ', k, '--->>>', v, 'type: ', type(v))
+                print('    ', key, '--->>>', val, 'type: ', type(val))
 
 
 class UI:
     pass
 
 
-class FrameEntryValue:
-    def __init__(self, real_var_name: RealVarName, obj):
+class FrameEntry:
+    def __init__(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj):
         super().__init__()
+        self.any_var_name = any_var_name
         self.real_var_name = real_var_name
         self.obj = obj
 
     def __str__(self):
-        s = ''
-        s += self.real_var_name + '  ' + str(self.obj)
-        return s
+        return self.real_var_name + '  ' + str(self.obj)
 
 
 class Frame:
@@ -53,20 +52,20 @@ class Frame:
         self.frame_entries = {}
 
     def __str__(self):
-        s = ''
-        s += 'Context Frame:\n'
-        for k, v in self.frame_entries.items():
-            s += k + '  ' + str(v) + '\n'
-        return s
+        self_str = ''
+        self_str += 'Context Frame:\n'
+        for key, val in self.frame_entries.items():
+            self_str += key + '  ' + str(val) + '\n'
+        return self_str
 
-    def add_entry(self, var_name: AnyVarName, real_var_name: RealVarName, obj):
+    def add_entry(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj):
         # TODO check if entry already exists.
-        self.frame_entries[var_name] = FrameEntryValue(real_var_name, obj)
+        self.frame_entries[any_var_name] = FrameEntry(any_var_name, real_var_name, obj)
 
-    def get_matching_instance(self, c) -> Optional[FrameEntryValue]:
-        for k, v in self.frame_entries.items():
-            if isinstance(v.obj, c):
-                return self.frame_entries[k]
+    def get_matching_instance(self, clazz) -> Optional[FrameEntry]:
+        for name, frame_entry in self.frame_entries.items():
+            if isinstance(frame_entry.obj, clazz):
+                return frame_entry
         return None
 
 
@@ -82,25 +81,27 @@ class Context:
             s += str(frame)
         return s
 
-    def push_frame(self):
+    def push_frame(self) -> None:
         self.frames.append(Frame())
 
-    def pop_frame(self):
+    def pop_frame(self) -> None:
         self.frames.pop()
 
-    def add_entry(self, var_name: AnyVarName, real_var_name: RealVarName, obj):
+    def add_entry(self, var_name: AnyVarName, real_var_name: RealVarName, obj) -> None:
         self.frames[len(self.frames) - 1].add_entry(var_name, real_var_name, obj)
 
     def lookup_real_variable_name(self, name: AnyVarName) -> Optional[RealVarName]:
+        # Look backwards through the frame, newest to oldest.
         for i in range(len(self.frames) - 1, -1, -1):
             if name in self.frames[i].frame_entries:
                 return self.frames[i].frame_entries[name].real_var_name
         return None
 
-    def get_real_variable_name(self, name):
+    def get_real_variable_name(self, name: AnyVarName) -> RealVarName:
         real_name = self.lookup_real_variable_name(name)
         if real_name is not None:
             return real_name
+        # TODO at some point, we need to validate that these are real variable names and signal an error otherwise.
         return name
 
     def find_nearest_instance(self, c):
@@ -157,7 +158,7 @@ class WxObjects:
         while True:
             # IMPORTANT be sure to use search, not match.
             # match only matches at the beginning of the string.
-            result = re.search(pattern, remainder)
+            result = re_search(pattern, remainder)
             if result is None:
                 # Nothing (remaining) to skip or replace.
                 return new + remainder
@@ -264,7 +265,7 @@ class WxObjects:
             self.current_uiid = None  # safety, make sure we don't accidentally reuse
             return self.XCallResult(self.runtime_variable_name, thing)
         # else try it as a property.
-        if len(args_eval) == 0:
+        if not args_eval:
             # No positional args, so multiple properties are in the kwargs.
             # The entire function string is the object.
             for k, v in kwargs_eval.items():
@@ -304,7 +305,7 @@ class WxObjects:
     def get_classname(self, c):
         sname = str(c)
         pattern = r""".* \'(?P<classname>.*)\'.*"""
-        result = re.match(pattern, sname)
+        result = re_match(pattern, sname)
         if result is None:
             return None
         name = result['classname']
@@ -361,6 +362,7 @@ class WxObjects:
                             call_attribs[param_name] = varname
         xcall_result = self.xcall_attribs(prefix + '.' + name, call_attribs)
         if xcall_result is not None:
+            dump('result:', xcall_result.result)
             post_call = self.get_post_call(xcall_result.result)
             if post_call is not None:
                 fname, c = post_call
