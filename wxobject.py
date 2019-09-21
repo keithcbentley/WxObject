@@ -75,11 +75,11 @@ class Context:
         self.frames = []
 
     def __str__(self):
-        s = ''
-        s += 'Context:\n'
+        self_str = ''
+        self_str += 'Context:\n'
         for frame in self.frames:
-            s += str(frame)
-        return s
+            self_str += str(frame)
+        return self_str
 
     def push_frame(self) -> None:
         self.frames.append(Frame())
@@ -104,9 +104,9 @@ class Context:
         # TODO at some point, we need to validate that these are real variable names and signal an error otherwise.
         return name
 
-    def find_nearest_instance(self, c):
+    def find_nearest_instance(self, clazz):
         for i in range(len(self.frames) - 1, -1, -1):
-            matching_instance = self.frames[i].get_matching_instance(c)
+            matching_instance = self.frames[i].get_matching_instance(clazz)
             if matching_instance is not None:
                 return matching_instance
         return None
@@ -135,9 +135,9 @@ class WxObjects:
         self.runtime_variable_name = 'var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
 
-    def codegen_output_line(self, s) -> None:
+    def codegen_output_line(self, output_string) -> None:
         if self.output_codegen:
-            print(s)
+            print(output_string)
 
     def codegen_get_current_variable_name(self) -> CodegenVarName:
         return 'self.' + self.runtime_variable_name
@@ -145,7 +145,7 @@ class WxObjects:
     def codegen_get_replace_variable_name(self, name) -> CodegenVarName:
         return 'self.' + self.context.get_real_variable_name(name)
 
-    def codegen_xname_replacement(self, s: str) -> str:
+    def codegen_xname_replacement(self, original_str: str) -> str:
         # fullx is everything that ends in x. x is just the end part.
         # If they are the same, it's a single x.name
         # pattern
@@ -154,7 +154,7 @@ class WxObjects:
         pattern = r"""(?P<fullx>[a-zA-z0-9_]*(?P<x>x\.(?P<name>[a-zA-Z0-9_]+)))"""
         # Build up the new string by skipping or replacing items.
         new = ''
-        remainder = s
+        remainder = original_str
         while True:
             # IMPORTANT be sure to use search, not match.
             # match only matches at the beginning of the string.
@@ -179,32 +179,32 @@ class WxObjects:
                 new = new + replaced
                 remainder = remainder[replace_end:]
 
-    def codegen_functioncall(self, s, args, kwargs, needs_var):
+    def codegen_functioncall(self, function_name_string, args, kwargs, needs_var):
         positional_args_string = ''
         have_positional = False
-        for a in args:
+        for arg in args:
             if have_positional:
                 positional_args_string += ', '
             have_positional = True
-            if a.startswith('*'):
-                stripped = a[2:-1]  # get rid of asterisk and leading and trailing paren. Fragile.
+            if arg.startswith('*'):
+                stripped = arg[2:-1]  # get rid of asterisk and leading and trailing paren. Fragile.
                 positional_args_string += self.codegen_xname_replacement(stripped)
             else:
-                positional_args_string += self.codegen_xname_replacement(a)
+                positional_args_string += self.codegen_xname_replacement(arg)
         kwargs_string = ''
         have_kw = False
-        for k, v in kwargs.items():
+        for arg_name, arg_val in kwargs.items():
             if have_kw:
                 kwargs_string += ', '
             have_kw = True
-            vs = self.codegen_xname_replacement(v)
-            kwargs_string += k + '=' + vs
+            vs = self.codegen_xname_replacement(arg_val)
+            kwargs_string += arg_name + '=' + vs
         separator = ',' if have_positional and have_kw else ''
 
         function_call_template = '{variable}{s}({positional}{separator}{kw})'
         function_call_string = function_call_template.format(
             variable=self.codegen_get_current_variable_name() + '=' if needs_var else '',
-            s=self.codegen_xname_replacement(s),
+            s=self.codegen_xname_replacement(function_name_string),
             positional=positional_args_string,
             separator=separator,
             kw=kwargs_string)
@@ -222,8 +222,8 @@ class WxObjects:
     def save_ui_object(self, name, obj):
         self.ui.__setattr__(name, obj)
 
-    def xeval(self, s):
-        return eval(s, self.xenv, {})
+    def xeval(self, str_to_eval):
+        return eval(str_to_eval, self.xenv, {})
 
     class XCallResult:
         def __init__(self, real_var_name, result):
