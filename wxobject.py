@@ -62,10 +62,11 @@ class Frame:
         # TODO check if entry already exists.
         self.frame_entries[any_var_name] = FrameEntry(any_var_name, real_var_name, obj)
 
-    def get_matching_instance(self, clazz) -> Optional[FrameEntry]:
+    def get_matching_instance(self, clazzes) -> Optional[FrameEntry]:
         for name, frame_entry in self.frame_entries.items():
-            if isinstance(frame_entry.obj, clazz):
-                return frame_entry
+            for clazz in clazzes:
+                if isinstance(frame_entry.obj, clazz):
+                    return frame_entry
         return None
 
 
@@ -104,9 +105,9 @@ class Context:
         # TODO at some point, we need to validate that these are real variable names and signal an error otherwise.
         return name
 
-    def find_nearest_instance(self, clazz):
+    def find_nearest_instance(self, clazzes):
         for i in range(len(self.frames) - 1, -1, -1):
-            matching_instance = self.frames[i].get_matching_instance(clazz)
+            matching_instance = self.frames[i].get_matching_instance(clazzes)
             if matching_instance is not None:
                 return matching_instance
         return None
@@ -355,7 +356,7 @@ class WxObjects:
             param_map = self.get_param_map(c)
             for param_name, target_class in param_map.items():
                 if target_class is not None:  # param map uses None to disable attribute
-                    nearest = self.context.find_nearest_instance(target_class)
+                    nearest = self.context.find_nearest_instance((target_class,))
                     if nearest is not None:
                         varname = 'x.' + nearest.real_var_name
                         if param_name not in call_attribs:
@@ -365,8 +366,8 @@ class WxObjects:
             dump('result:', xcall_result.result)
             post_call = self.get_post_call(xcall_result.result)
             if post_call is not None:
-                fname, c = post_call
-                nearest1 = self.context.find_nearest_instance(c)
+                fname, clazz = post_call
+                nearest1 = self.context.find_nearest_instance((clazz,))
                 if nearest1 is not None:
                     # Need to use xcall mechanism so that code is generated for the call.
                     self.xcall(fname, 'x.' + nearest1.real_var_name, 'x.' + xcall_result.real_var_name)
