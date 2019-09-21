@@ -26,9 +26,9 @@ if __name__ == '__main__':
         file1 = os.path.join(own_dir, 'wx1.xml')
 #        file2 = os.path.join(own_dir, 'wx2.xml')
         ui = ThisUi()
-        wxobjects1 = wxobject.WxObjects(ui)
-        # xobjects.output_codegen = True
-        xobj_parser = xobj.XobjParser(all_namespaces, wxobjects1)
+        wxobjects = wxobject.WxObjects(ui)
+        wxobjects.output_codegen = True
+        xobj_parser = xobj.XobjParser(all_namespaces, wxobjects)
         app = wx.App()
 
         xobj_parser.instantiate_from_file(file1)

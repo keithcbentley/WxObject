@@ -118,8 +118,11 @@ class Context:
         # TODO at some point, we need to validate that these are real variable names and signal an error otherwise.
         return name
 
-    def find_nearest_instance(self, clazzes: Iterable[Type], skip_current=False) -> Optional[
-        FrameMatchingInstanceResult]:
+    def find_nearest_instance(
+            self,
+            clazzes: Iterable[Type],
+            skip_current=False
+    ) -> Optional[FrameMatchingInstanceResult]:
         start_index = len(self.frames) - 1
         if skip_current:
             start_index -= 1
@@ -135,7 +138,6 @@ class WxObjects:
         super().__init__()
         self.ui = ui
         self.context = Context()
-        self.current_uiid: RealVarName = None
         self.variable_counter = 0
         self.runtime_variable_name: RealVarName = None
         self.output_codegen = False
@@ -146,9 +148,9 @@ class WxObjects:
             '__builtins__': {}
         }
 
-    def set_new_runtime_variable_name(self) -> None:
-        if self.current_uiid is not None:
-            self.runtime_variable_name = self.current_uiid
+    def set_new_runtime_variable_name(self, uiid) -> None:
+        if uiid is not None:
+            self.runtime_variable_name = uiid
             return
         self.runtime_variable_name = 'var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
@@ -249,15 +251,15 @@ class WxObjects:
             self.real_var_name = real_var_name
             self.result = result
 
-    def xcall(self, s, *args, needs_var=True, **kwargs):
+    def xcall(self, s, *args_strings, needs_var=True, uiid=None, **kwargs_strings):
         args_eval = ()
-        for a in args:
+        for a in args_strings:
             if a.startswith('*'):
                 args_eval += self.xeval(a[1:])
             else:
                 args_eval += (self.xeval(a),)
         kwargs_eval = {}
-        for k, v in kwargs.items():
+        for k, v in kwargs_strings.items():
             kwargs_eval[k] = self.xeval(v)
 
         # Callers can't tell if this is a function call or property set.
@@ -269,7 +271,7 @@ class WxObjects:
         part_names = s.split('.')
         last = part_names[-1]
         if callable(funcorprop):
-            self.set_new_runtime_variable_name()
+            self.set_new_runtime_variable_name(uiid)
             thing = funcorprop(*args_eval, **kwargs_eval)
             if needs_var:
                 self.save_ui_object(self.runtime_variable_name, thing)
@@ -277,34 +279,34 @@ class WxObjects:
                 self.context.add_entry(self.runtime_variable_name, self.runtime_variable_name, thing)
                 self.context.add_entry(last, self.runtime_variable_name, thing)
 
-            self.codegen_functioncall(s, args, kwargs, needs_var)
+            self.codegen_functioncall(s, args_strings, kwargs_strings, needs_var)
             #            if needs_var:
             #                self.set_replace_variable_name(last)
-            self.current_uiid = None  # safety, make sure we don't accidentally reuse
             return self.XCallResult(self.runtime_variable_name, thing)
         # else try it as a property.
         if not args_eval:
             # No positional args, so multiple properties are in the kwargs.
             # The entire function string is the object.
-            for k, v in kwargs_eval.items():
-                obj = self.xeval(s)
-                obj.__setattr__(k, v)  # Set the property on the object itself, not the ui object.
-                self.codegen_property(s, k, kwargs[k])
+            obj = self.xeval(s)
+            for property_name, property_value in kwargs_eval.items():
+                # Set the property on the object itself, not the ui object.
+                obj.__setattr__(property_name, property_value)
+                self.codegen_property(s, property_name, kwargs_strings[property_name])
             return None
         # Got positional arg so assume property value is the first positional arg.
         # The object is the first part of the function string and the property s is the last part.
         objstr = '.'.join(part_names[0:-1])
         obj = self.xeval(objstr)
         obj.__setattr__(last, args_eval[0])  # Set the property on the object itself, not the ui object.
-        self.codegen_property(objstr, last, args[0])
+        self.codegen_property(objstr, last, args_strings[0])
         return None  # TODO: is there anything more useful to return?
 
     def xcall_attribs(self, s, attribs):
         attribs_copy = attribs.copy()
         id_str = 'ui.id'
-        self.current_uiid = None
+        uiid = None
         if id_str in attribs_copy:
-            self.current_uiid = attribs_copy[id_str]
+            uiid = attribs_copy[id_str]
             del attribs_copy[id_str]
         kwargs = {}
         for k, v in attribs_copy.items():
@@ -314,16 +316,17 @@ class WxObjects:
                 pass  # It's a dotted attribute to process after.
         for k in kwargs.keys():  # Remove undotted attributes.
             del attribs_copy[k]
-        xcall_result = self.xcall(s, **kwargs)
+        xcall_result = self.xcall(s, uiid=uiid, **kwargs)
         for k, v in attribs_copy.items():
             self.xcall(k, v, needs_var=False)
             self.context.pop_frame()
         return xcall_result
 
-    def get_classname(self, c):
-        sname = str(c)
+    @staticmethod
+    def get_classname(clazz: Type):
+        python_class_name_string = str(clazz)
         pattern = r""".* \'(?P<classname>.*)\'.*"""
-        result = re_match(pattern, sname)
+        result = re_match(pattern, python_class_name_string)
         if result is None:
             return None
         name = result['classname']
@@ -338,11 +341,11 @@ class WxObjects:
         # Scan classes in reverse order so that derived classes
         # can override base classes.
         mro.reverse()
-        for c in mro:
-            cname = self.get_classname(c)
-            if cname in param_map:
+        for clazz in mro:
+            class_name = WxObjects.get_classname(clazz)
+            if class_name in param_map:
                 # TODO use a class/type here to clean up naming.
-                param_entry = param_map[cname][0]
+                param_entry = param_map[class_name][0]
                 param_name = param_entry[0]
                 param_value = param_entry[1]
                 params[param_name] = param_value
