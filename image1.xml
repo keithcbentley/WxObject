@@ -4,7 +4,7 @@
     <wx.Frame ui.id="main_frame" parent="None" title="'Hello World 2'">
         <wx.Panel>
             <wx.Image ui.id="image" width="240" height="240"/>
-            <wx.StaticBitmap bitmap="wx.Bitmap(x.Image)"/>
+            <wx.StaticBitmap bitmap="wx.Bitmap(x.image)"/>
             <wx.Button label="'Browse'"/>
             <wx.TextCtrl size="(200,-1)"/>
             <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.Panel.SetSizer="x.BoxSizer">

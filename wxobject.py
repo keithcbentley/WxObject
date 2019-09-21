@@ -147,29 +147,36 @@ class WxObjects:
     def codegen_xname_replacement(self, s: str) -> str:
         # fullx is everything that ends in x. x is just the end part.
         # If they are the same, it's a single x.name
+        # pattern
+        #    grab everything that looks like: prefix_ends_in_x.name
+        #    inside the prefix_ends_in_x part, grab just the x part.
         pattern = r"""(?P<fullx>[a-zA-z0-9_]*(?P<x>x\.(?P<name>[a-zA-Z0-9_]+)))"""
+        # Build up the new string by skipping or replacing items.
         new = ''
         remainder = s
         while True:
-            result = re.match(pattern, remainder)
+            # IMPORTANT be sure to use search, not match.
+            # match only matches at the beginning of the string.
+            result = re.search(pattern, remainder)
             if result is None:
+                # Nothing (remaining) to skip or replace.
                 return new + remainder
 
             # Not a "real" x name.  Skip over it.
             if result['fullx'] != result['x']:
                 skip_end = result.span('fullx')[1]
-                additional = remainder[0:skip_end]
-                new = new + additional
+                skipped = remainder[0:skip_end]
+                new = new + skipped
                 remainder = remainder[skip_end:]
-                continue
-
-            # Got a real x match, do the replacement.
-            replace_start = result.span('x')[0]
-            replace_end = result.span('x')[1]
-            old_name = result['name']
-            additional = remainder[0:replace_start] + self.codegen_get_replace_variable_name(old_name)
-            new = new + additional
-            remainder = remainder[replace_end:]
+            else:
+                # Got a real x match, do the replacement.
+                replace_start = result.span('x')[0]
+                replace_end = result.span('x')[1]
+                old_name = result['name']
+                new_name = self.codegen_get_replace_variable_name(old_name)
+                replaced = remainder[0:replace_start] + new_name
+                new = new + replaced
+                remainder = remainder[replace_end:]
 
     def codegen_functioncall(self, s, args, kwargs, needs_var):
         positional_args_string = ''
@@ -354,7 +361,6 @@ class WxObjects:
                             call_attribs[param_name] = varname
         xcall_result = self.xcall_attribs(prefix + '.' + name, call_attribs)
         if xcall_result is not None:
-            dump('thing:', xcall_result.result)
             post_call = self.get_post_call(xcall_result.result)
             if post_call is not None:
                 fname, c = post_call
