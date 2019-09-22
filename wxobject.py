@@ -146,11 +146,6 @@ class Context:
         Search in reverse chronological order (most recent to least recent) to try
         to find the real name of a variable.
 
-        Currently, real variable names are added to frames as well as being added
-        to the ui object.  This means that real variable names may be found in the
-        context instead of on the object.  This will probably change in the future
-        to make real variable name lookup more robust.
-
         :param name:    a real or transient variable name
         :return:        the real variable name or None if not found
         """
@@ -189,7 +184,7 @@ class WxObjects:
         self.ui = ui
         self.context = Context()
         self.variable_counter = 0
-        self.runtime_variable_name: RealVarName = RealVarName('')
+        self.real_variable_name: RealVarName = RealVarName('')
         self.output_codegen = False
 
         self.xenv = {
@@ -206,9 +201,9 @@ class WxObjects:
         Note that uiid is not an optional parameter but it may be None.
         """
         if uiid is not None:
-            self.runtime_variable_name = uiid
+            self.real_variable_name = uiid
             return
-        self.runtime_variable_name = 'var{n}'.format(n=self.variable_counter)
+        self.real_variable_name = 'var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
 
     def codegen_output_line(self, output_string: str) -> None:
@@ -216,7 +211,7 @@ class WxObjects:
             print(output_string)
 
     def codegen_get_current_variable_name(self) -> CodegenVarName:
-        return CodegenVarName('self.' + self.runtime_variable_name)
+        return CodegenVarName('self.' + self.real_variable_name)
 
     def codegen_get_replace_variable_name(self, name: AnyVarName) -> CodegenVarName:
         lookup_name = self.context.lookup_real_variable_name(name)
@@ -334,15 +329,12 @@ class WxObjects:
             self.set_new_runtime_variable_name(uiid)
             thing = funcorprop(*args_eval, **kwargs_eval)
             if needs_var:
-                self.save_ui_object(self.runtime_variable_name, thing)
+                self.save_ui_object(self.real_variable_name, thing)
                 self.save_ui_object(last, thing)  # this is the 'magic' last name
-                self.context.add_entry(self.runtime_variable_name, self.runtime_variable_name, thing)
-                self.context.add_entry(last, self.runtime_variable_name, thing)
+                self.context.add_entry(last, self.real_variable_name, thing)
 
             self.codegen_functioncall(s, args_strings, kwargs_strings, needs_var)
-            #            if needs_var:
-            #                self.set_replace_variable_name(last)
-            return self.XCallResult(self.runtime_variable_name, thing)
+            return self.XCallResult(self.real_variable_name, thing)
         # else try it as a property.
         if not args_eval:
             # No positional args, so multiple properties are in the kwargs.
