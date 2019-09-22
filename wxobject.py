@@ -216,11 +216,60 @@ class WxObjects:
     def codegen_get_replace_variable_name(self, name: AnyVarName) -> CodegenVarName:
         lookup_name = self.context.lookup_real_variable_name(name)
         if lookup_name is not None:
-            return CodegenVarName('self.' + self.context.lookup_real_variable_name(name))
+            return CodegenVarName('self.' + lookup_name)
         # TODO validate that the name is actually on the ui object.
         return CodegenVarName('self.' + name)
 
+    def runtime_get_replace_variable_name(self, name: AnyVarName) -> RealVarName:
+        # See if the name is a transient name and replace if necessary.
+        # For runtime replacements, we put the x. prefix back on the variable.
+        lookup_name = self.context.lookup_real_variable_name(name)
+        if lookup_name is not None:
+            return RealVarName('x.' + lookup_name)
+        # TODO validate that the name is actually on the ui object.
+        return RealVarName('x.' + name)
+
+    def xname_replacement(self, original_str: str, replacement_method) -> str:
+        # fullx is everything that ends in x. x is just the end part.
+        # If they are the same, it's a single x.name
+        # pattern
+        #    grab everything that looks like: prefix_ends_in_x.name
+        #    inside the prefix_ends_in_x part, grab just the x part.
+        pattern = r"""(?P<fullx>[a-zA-z0-9_]*(?P<x>x\.(?P<name>[a-zA-Z0-9_]+)))"""
+        # Build up the new string by skipping or replacing items.
+        new = ''
+        remainder = original_str
+        while True:
+            # IMPORTANT be sure to use search, not match.
+            # match only matches at the beginning of the string.
+            result = re_search(pattern, remainder)
+            if result is None:
+                # Nothing (remaining) to skip or replace.
+                return new + remainder
+
+            # Not a "real" x name.  Skip over it.
+            if result['fullx'] != result['x']:
+                skip_end = result.span('fullx')[1]
+                skipped = remainder[0:skip_end]
+                new = new + skipped
+                remainder = remainder[skip_end:]
+            else:
+                # Got a real x match, do the replacement.
+                replace_start = result.span('x')[0]
+                replace_end = result.span('x')[1]
+                old_name = TransientVarName(result['name'])  # assume it's transient.
+                new_name = replacement_method(old_name)
+                replaced = remainder[0:replace_start] + new_name
+                new = new + replaced
+                remainder = remainder[replace_end:]
+
     def codegen_xname_replacement(self, original_str: str) -> str:
+        return self.xname_replacement(original_str, self.codegen_get_replace_variable_name)
+
+    def runtime_xname_replacement(self, original_str: str) -> str:
+        return self.xname_replacement(original_str, self.runtime_get_replace_variable_name)
+
+    def codegen_xname_replacement1(self, original_str: str) -> str:
         # fullx is everything that ends in x. x is just the end part.
         # If they are the same, it's a single x.name
         # pattern
@@ -298,7 +347,8 @@ class WxObjects:
         self.ui.__setattr__(name, obj)
 
     def xeval(self, str_to_eval):
-        return eval(str_to_eval, self.xenv, {})
+        replacement_string = self.runtime_xname_replacement(str_to_eval)
+        return eval(replacement_string, self.xenv, {})
 
     class XCallResult:
         def __init__(self, real_var_name, result):
@@ -330,7 +380,6 @@ class WxObjects:
             thing = funcorprop(*args_eval, **kwargs_eval)
             if needs_var:
                 self.save_ui_object(self.real_variable_name, thing)
-                self.save_ui_object(last, thing)  # this is the 'magic' last name
                 self.context.add_entry(last, self.real_variable_name, thing)
 
             self.codegen_functioncall(s, args_strings, kwargs_strings, needs_var)
