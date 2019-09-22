@@ -381,6 +381,7 @@ class WxObjects:
             if needs_var:
                 self.save_ui_object(self.real_variable_name, thing)
                 self.context.add_entry(last, self.real_variable_name, thing)
+                self.context.add_entry('this', self.real_variable_name, thing)
 
             self.codegen_functioncall(s, args_strings, kwargs_strings, needs_var)
             return self.XCallResult(self.real_variable_name, thing)
