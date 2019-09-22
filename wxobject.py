@@ -501,7 +501,8 @@ class WxObjects:
                     self.xcall(
                         function_name,
                         'x.' + nearest_matching_result.frame_entry.real_var_name,
-                        'x.' + xcall_result.real_var_name)
+                        'x.' + xcall_result.real_var_name,
+                        needs_var=False)
                     self.context.pop_frame()
 
     def on_element_end(self, element, namespace, prefix, name):
