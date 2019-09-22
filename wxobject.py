@@ -1,10 +1,10 @@
-from typing import NewType, Optional, Type, Iterable
+from typing import NewType, Optional, Type, Iterable, Union
 from re import search as re_search, match as re_match
 import wx
 
-AnyVarName = NewType('AnyVarName', str)
-RealVarName = NewType('RealVarName', AnyVarName)
-UsableVarName = NewType('UsableVarName', str)
+RealVarName = NewType('RealVarName', str)
+TransientVarName = NewType('TransientVarName', str)
+AnyVarName = Union[RealVarName, TransientVarName]
 CodegenVarName = NewType('CodegenVarName', str)
 
 
@@ -46,7 +46,7 @@ class FrameEntry:
         return self.real_var_name + '  ' + str(self.obj)
 
 
-class FrameMatchingInstanceResult:
+class FrameMatchingIsinstanceResult:
     def __init__(self, clazz: Type, frame_entry: FrameEntry):
         super().__init__()
         self.clazz = clazz
@@ -72,14 +72,33 @@ class Frame:
         return self_str
 
     def add_entry(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj) -> None:
-        # TODO check if entry already exists.
+        r"""
+        Adds a new entry to this frame.
+
+        :param any_var_name:    a real or transient name for the object
+        :param real_var_name:   the (unique) real name for the object
+        :param obj:             the object
+        :return: None
+        """
+        # TODO check if entry already exists.  If it already exists, it's probably an error.
         self.frame_entries[any_var_name] = FrameEntry(any_var_name, real_var_name, obj)
 
-    def find_matching_instance(self, clazzes: Iterable[Type]) -> Optional[FrameMatchingInstanceResult]:
+    def find_matching_isinstance(self, clazzes: Iterable[Type]) -> Optional[FrameMatchingIsinstanceResult]:
+        r"""
+        Searches through the entries in this frame to see if any of the objects
+        is an instance of any of the classes given.  isinstance is used for the check
+        so an object matches if it is an instance of the class or an instance of a subclass
+        of the class.  (This is the normal behavior of isinstance.)  There is no guaranteed search
+        order of either the entries or the classes so there is no guaranteed result if there are
+        multiple matches.  Only the first matching result is returned.
+
+        :param clazzes: an iterable of classes
+        :return: a FrameMatchingInstanceResult if there is a match, otherwise None
+        """
         for name, frame_entry in self.frame_entries.items():
             for clazz in clazzes:
                 if isinstance(frame_entry.obj, clazz):
-                    return FrameMatchingInstanceResult(clazz, frame_entry)
+                    return FrameMatchingIsinstanceResult(clazz, frame_entry)
         return None
 
 
@@ -96,38 +115,69 @@ class Context:
         return self_str
 
     def push_frame(self) -> None:
+        r"""
+        Pushes a new empty frame onto the context.
+
+        :return: None
+        """
         self.frames.append(Frame())
 
     def pop_frame(self) -> None:
+        r"""
+        Pops the top (most recent) frame from the context.
+
+        :return: None
+        """
         self.frames.pop()
 
-    def add_entry(self, var_name: AnyVarName, real_var_name: RealVarName, obj) -> None:
-        self.frames[len(self.frames) - 1].add_entry(var_name, real_var_name, obj)
+    def add_entry(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj) -> None:
+        r"""
+        Adds a new entry to the topmost (most recent) frame on the context.
+
+        :param any_var_name:    any var name for the frame entry
+        :param real_var_name:   real var name for the frame entry
+        :param obj:             object for the frame entry
+        :return: None
+        """
+        self.frames[len(self.frames) - 1].add_entry(any_var_name, real_var_name, obj)
 
     def lookup_real_variable_name(self, name: AnyVarName) -> Optional[RealVarName]:
-        # Look backwards through the frame, newest to oldest.
+        r"""
+        Search in reverse chronological order (most recent to least recent) to try
+        to find the real name of a variable.
+
+        Currently, real variable names are added to frames as well as being added
+        to the ui object.  This means that real variable names may be found in the
+        context instead of on the object.  This will probably change in the future
+        to make real variable name lookup more robust.
+
+        :param name:    a real or transient variable name
+        :return:        the real variable name or None if not found
+        """
+        # Search backwards.  Remember that -1 is the non-inclusive lower limit, not 0.
         for i in range(len(self.frames) - 1, -1, -1):
             if name in self.frames[i].frame_entries:
                 return self.frames[i].frame_entries[name].real_var_name
         return None
 
-    def get_real_variable_name(self, name: AnyVarName) -> RealVarName:
-        real_name = self.lookup_real_variable_name(name)
-        if real_name is not None:
-            return real_name
-        # TODO at some point, we need to validate that these are real variable names and signal an error otherwise.
-        return name
-
-    def find_nearest_instance(
+    def find_nearest_isinstance(
             self,
             clazzes: Iterable[Type],
             skip_current=False
-    ) -> Optional[FrameMatchingInstanceResult]:
+    ) -> Optional[FrameMatchingIsinstanceResult]:
+        r"""
+        Search in reverse chronological order (most recent to least recent) to try
+        to find an object that is an instance of any of the classes given.
+
+        :param clazzes:     classes to look for
+        :param skip_current: skip the current (most recent) frame
+        :return: a FrameMatchingIsinstanceResult or None if not found
+        """
         start_index = len(self.frames) - 1
         if skip_current:
             start_index -= 1
         for i in range(start_index, -1, -1):
-            frame_matching_instance_result = self.frames[i].find_matching_instance(clazzes)
+            frame_matching_instance_result = self.frames[i].find_matching_isinstance(clazzes)
             if frame_matching_instance_result is not None:
                 return frame_matching_instance_result
         return None
@@ -139,7 +189,7 @@ class WxObjects:
         self.ui = ui
         self.context = Context()
         self.variable_counter = 0
-        self.runtime_variable_name: RealVarName = None
+        self.runtime_variable_name: RealVarName = RealVarName('')
         self.output_codegen = False
 
         self.xenv = {
@@ -148,22 +198,32 @@ class WxObjects:
             '__builtins__': {}
         }
 
-    def set_new_runtime_variable_name(self, uiid) -> None:
+    def set_new_runtime_variable_name(self, uiid: Optional[str]) -> None:
+        r"""
+        Sets the (current) runtime variable name.
+        If uiid is not None, the uiid itself is used as the variable name.
+        If uiid is None, a new variable name is autogenerated.
+        Note that uiid is not an optional parameter but it may be None.
+        """
         if uiid is not None:
             self.runtime_variable_name = uiid
             return
         self.runtime_variable_name = 'var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
 
-    def codegen_output_line(self, output_string) -> None:
+    def codegen_output_line(self, output_string: str) -> None:
         if self.output_codegen:
             print(output_string)
 
     def codegen_get_current_variable_name(self) -> CodegenVarName:
-        return 'self.' + self.runtime_variable_name
+        return CodegenVarName('self.' + self.runtime_variable_name)
 
-    def codegen_get_replace_variable_name(self, name) -> CodegenVarName:
-        return 'self.' + self.context.get_real_variable_name(name)
+    def codegen_get_replace_variable_name(self, name: AnyVarName) -> CodegenVarName:
+        lookup_name = self.context.lookup_real_variable_name(name)
+        if lookup_name is not None:
+            return CodegenVarName('self.' + self.context.lookup_real_variable_name(name))
+        # TODO validate that the name is actually on the ui object.
+        return CodegenVarName('self.' + name)
 
     def codegen_xname_replacement(self, original_str: str) -> str:
         # fullx is everything that ends in x. x is just the end part.
@@ -193,7 +253,7 @@ class WxObjects:
                 # Got a real x match, do the replacement.
                 replace_start = result.span('x')[0]
                 replace_end = result.span('x')[1]
-                old_name = result['name']
+                old_name = TransientVarName(result['name'])  # assume it's transient.
                 new_name = self.codegen_get_replace_variable_name(old_name)
                 replaced = remainder[0:replace_start] + new_name
                 new = new + replaced
@@ -332,7 +392,8 @@ class WxObjects:
         name = result['classname']
         return name
 
-    def get_param_map(self, obj):
+    @staticmethod
+    def get_param_map(obj):
         params = {}
         if isinstance(obj, type):
             mro = obj.mro()
@@ -373,10 +434,10 @@ class WxObjects:
         call_attribs = element.attrib.copy()
         if prefix == 'wx':
             c = wx.__getattribute__(name)
-            param_map = self.get_param_map(c)
+            param_map = WxObjects.get_param_map(c)
             for param_name, target_class in param_map.items():
                 if target_class is not None:  # param map uses None to disable attribute
-                    nearest_matching_result = self.context.find_nearest_instance((target_class,))
+                    nearest_matching_result = self.context.find_nearest_isinstance((target_class,))
                     if nearest_matching_result is not None:
                         varname = 'x.' + nearest_matching_result.frame_entry.real_var_name
                         if param_name not in call_attribs:
@@ -388,7 +449,7 @@ class WxObjects:
                 classes = ()
                 for post_call in post_calls:
                     classes += (post_call.clazz,)
-                nearest_matching_result = self.context.find_nearest_instance(classes, skip_current=True)
+                nearest_matching_result = self.context.find_nearest_isinstance(classes, skip_current=True)
                 if nearest_matching_result is not None:
                     function_name = None
                     for post_call in post_calls:
@@ -428,7 +489,7 @@ param_map = {'wx._core.Window': [('parent', wx.Window)],
 #       target_class instance.method_name(class_name instance)
 # internally, it's actually called as
 #       method_name(target_class instance, class_name instance)
-class PostCall:
+class PostCallEntry:
     def __init__(self, function_name: str, clazz: Type):
         super().__init__()
         self.function_name = function_name
@@ -436,12 +497,12 @@ class PostCall:
 
 
 post_call_map = {
-    'wx._core.StatusBar': [PostCall('wx.Frame.SetStatusBar', wx.Frame)],
-    'wx._core.MenuBar': [PostCall('wx.Frame.SetMenuBar', wx.Frame)],
-    'wx._core.MenuItem': [PostCall('wx.Menu.Append', wx.Menu)],
-    'wx._core.SizerItem': [PostCall('wx.Sizer.Add', wx.Sizer)],
-    'wx._core.Sizer': [PostCall('wx.Window.SetSizer', wx.Window), PostCall('wx.Sizer.Add', wx.Sizer)],
-    'wx._core.GBSizerItem': [PostCall('wx.GridBagSizer.Add', wx.GridBagSizer)]
+    'wx._core.StatusBar': [PostCallEntry('wx.Frame.SetStatusBar', wx.Frame)],
+    'wx._core.MenuBar': [PostCallEntry('wx.Frame.SetMenuBar', wx.Frame)],
+    'wx._core.MenuItem': [PostCallEntry('wx.Menu.Append', wx.Menu)],
+    'wx._core.SizerItem': [PostCallEntry('wx.Sizer.Add', wx.Sizer)],
+    'wx._core.Sizer': [PostCallEntry('wx.Window.SetSizer', wx.Window), PostCallEntry('wx.Sizer.Add', wx.Sizer)],
+    'wx._core.GBSizerItem': [PostCallEntry('wx.GridBagSizer.Add', wx.GridBagSizer)]
 }
 
 if __name__ == '__main__':

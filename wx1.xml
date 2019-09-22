@@ -45,7 +45,7 @@
         <wx.Panel ui.id="radio_buttons">
             <wx.RadioButton ui.id="radio_button1" label="'radio1'" style="wx.RB_GROUP"/>
             <wx.RadioButton ui.id="radio_button2" label="'radio2'"/>
-            <wx.BoxSizer ui.id="radio_sizer" orient="wx.VERTICAL">
+            <wx.BoxSizer orient="wx.VERTICAL">
                 <wx.SizerItem window="x.radio_button1" proportion="0" flag="wx.ALL" border="5"/>
                 <wx.SizerItem window="x.radio_button2" proportion="0" flag="wx.ALL" border="5"/>
             </wx.BoxSizer>
