@@ -1,6 +1,4 @@
-<xobj:objects
-        xmlns="http://namespace.xobj.org/xobj/wx"
-        xmlns:xobj="http://namespace.xobj.org/xobj">
+<xobjects xmlns="local/xobj/wxobject">
     <wx.Frame ui.id="main_frame" parent="None" title="'Hello World 2'">
         <wx.Panel>
             <wx.Image ui.id="image" width="240" height="240"/>
@@ -8,13 +6,13 @@
             <wx.Button ui.id="button" label="'Browse'"/>
             <wx.TextCtrl ui.id="text_ctrl" size="(200,-1)"/>
             <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL">
-            <wx.SizerItem window="x.static_bitmap" proportion="0" flag="wx.ALL" border="5"/>
-            <wx.BoxSizer ui.id="h_sizer" orient="wx.HORIZONTAL">
-                <wx.SizerItem window="x.button" proportion="0" flag="wx.ALL" border="5"/>
-                <wx.SizerItem window="x.text_ctrl" proportion="0" flag="wx.ALL" border="7"/>
+                <wx.SizerItem window="x.static_bitmap" proportion="0" flag="wx.ALL" border="5"/>
+                <wx.BoxSizer ui.id="h_sizer" orient="wx.HORIZONTAL">
+                    <wx.SizerItem window="x.button" proportion="0" flag="wx.ALL" border="5"/>
+                    <wx.SizerItem window="x.text_ctrl" proportion="0" flag="wx.ALL" border="7"/>
+                </wx.BoxSizer>
             </wx.BoxSizer>
-        </wx.BoxSizer>
-    </wx.Panel>
-    <x.main_sizer.Fit window="x.Frame"/>
-</wx.Frame>
-        </xobj:objects>
+        </wx.Panel>
+        <x.main_sizer.Fit window="x.Frame"/>
+    </wx.Frame>
+</xobjects>

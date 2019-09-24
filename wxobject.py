@@ -1,5 +1,5 @@
 from typing import NewType, Optional, Type, Iterable, Union
-from re import search as re_search, match as re_match
+from re import search as re_search, match as re_match, fullmatch as re_fullmatch
 import wx
 
 RealVarName = NewType('RealVarName', str)
@@ -121,7 +121,6 @@ class Context:
         :return: None
         """
         self.frames.append(Frame())
-        print('push:', self)
 
     def pop_frame(self) -> None:
         r"""
@@ -129,7 +128,6 @@ class Context:
 
         :return: None
         """
-        print('before pop:', self)
         self.frames.pop()
 
     def add_entry(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj) -> None:
@@ -475,6 +473,15 @@ class WxObjects:
                 post_calls = post_call_map[class_name]
         return post_calls
 
+    @staticmethod
+    def is_constructorlike(element_string: str):
+        pattern = r"[a-zA-z0-9_]*.[a-zA-z0-9_]*"
+        if re_fullmatch(pattern, element_string):
+            return True
+        if element_string.endswith('.Create'):
+            return True
+        return False
+
     def on_element_start(self, element, namespace, prefix, name):
         #        print('Got element:', element, namespace, prefix, name)
         #        for k, v in element.attrib.items():
@@ -491,7 +498,7 @@ class WxObjects:
                         if param_name not in call_attribs:
                             call_attribs[param_name] = varname
         xcall_result = self.xcall_attribs(prefix + '.' + name, call_attribs)
-        if xcall_result is not None:
+        if xcall_result is not None and WxObjects.is_constructorlike(prefix + '.' + name):
             post_calls = self.get_post_call(xcall_result.result)
             if post_calls is not None:
                 classes = ()
