@@ -22,6 +22,7 @@
             <xs:element name="wx.Image" type="wxImageType"/>
             <xs:element name="wx.StaticBitmap" type="wxStaticBitmapType"/>
             <xs:element name="wx.TextCtrl" type="wxTextCtrlType"/>
+            <xs:element name="wx.StaticText" type="wxStaticTextType"/>
         </xs:choice>
     </xs:group>
 
@@ -42,6 +43,7 @@
             <xs:element name="x.Image"/>
             <xs:element name="x.StaticBitmap"/>
             <xs:element name="x.TextCtrl"/>
+            <xs:element name="x.StaticText"/>
         </xs:choice>
     </xs:group>
 
@@ -97,7 +99,7 @@
 
     <xs:complexType name="wxMenuItemType">
         <xs:complexContent>
-            <xs:extension base="nestingType">
+            <xs:extension base="uiidType">
                 <xs:attribute name="parentMenu" type="xs:string"/>
                 <xs:attribute name="id" type="xs:string"/>
                 <xs:attribute name="text" type="xs:string"/>
@@ -168,6 +170,26 @@
         <xs:complexContent>
             <xs:extension base="wxControlType">
                 <xs:attribute name="value" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxStaticTextType">
+        <xs:complexContent>
+            <xs:extension base="wxControlType">
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="x.StaticText.GetFont" type="uiidType"/>
+                    <xs:element name="x.StaticText.SetFont">
+                        <xs:complexType>
+                            <xs:complexContent>
+                                <xs:extension base="uiidType">
+                                    <xs:attribute name="font" type="xs:string"/>
+                                </xs:extension>
+                            </xs:complexContent>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:choice>
+                <xs:attribute name="label" type="xs:string"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
