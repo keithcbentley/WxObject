@@ -27,7 +27,7 @@ if __name__ == '__main__':
 #        file2 = os.path.join(own_dir, 'wx2.xml')
         ui = ThisUi()
         wxobjects = wxobject.WxObjects(ui)
-        wxobjects.output_codegen = True
+        #wxobjects.output_codegen = True
         xobj_parser = xobj.XobjParser(all_namespaces, wxobjects)
         app = wx.App()
 

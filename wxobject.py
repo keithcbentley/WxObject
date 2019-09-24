@@ -121,6 +121,7 @@ class Context:
         :return: None
         """
         self.frames.append(Frame())
+        print('push:', self)
 
     def pop_frame(self) -> None:
         r"""
@@ -128,6 +129,7 @@ class Context:
 
         :return: None
         """
+        print('before pop:', self)
         self.frames.pop()
 
     def add_entry(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj) -> None:
@@ -410,6 +412,10 @@ class WxObjects:
         if id_str in attribs_copy:
             uiid = attribs_copy[id_str]
             del attribs_copy[id_str]
+        if 'xobj_id' in attribs_copy:
+            del attribs_copy['xobj_id']
+        if 'xobj_id_ref' in attribs_copy:
+            del attribs_copy['xobj_id_ref']
         kwargs = {}
         for k, v in attribs_copy.items():
             if k.find('.') < 0:

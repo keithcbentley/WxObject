@@ -1,20 +1,18 @@
-<xobj:objects
-        xmlns="http://namespace.xobj.org/xobj/wx"
-        xmlns:xobj="http://namespace.xobj.org/xobj">
-    <wx.Frame ui.id="main_frame" parent="None" title="'Hello Frame'">
+<xobjects xmlns="local/xobj/wxobject">
+    <wx.Frame ui.id="main_frame" parent="None" title="'Main Frame'">
         <wx.StatusBar>
             <x.StatusBar StatusText="'New Status'"/>
         </wx.StatusBar>
         <wx.MenuBar>
-            <xobj:include_xobj_fragment xobj_id="menubar_contents"/>
+            <xobj_include_xobj_fragment xobj_id_ref="menubar_contents"/>
         </wx.MenuBar>
         <wx.Panel>
-            <xobj:include_xobj_fragment xobj_id="panel_contents"/>
+            <xobj_include_xobj_fragment xobj_id_ref="panel_contents"/>
         </wx.Panel>
     </wx.Frame>
     <wx.Frame ui.id="child_frame" parent="x.main_frame" title="'Second Frame'">
     </wx.Frame>
-    <xobj:fragment xobj:id="menubar_contents">
+    <xobj_fragment xobj_id="menubar_contents">
         <wx.Menu x.MenuBar.Append="*(x.Menu, 'Menu&amp;1')">
             <wx.MenuItem parentMenu="None" id="1" text="'Menu item 1 1'"/>
             <wx.MenuItem parentMenu="None" id="2" text="'Menu item 1 2'"/>
@@ -23,11 +21,11 @@
             <wx.MenuItem parentMenu="None" id="3" text="'Menu item 2 1'"/>
             <wx.MenuItem parentMenu="None" id="4" text="'Menu item 2 2'"/>
         </wx.Menu>
-    </xobj:fragment>
-    <xobj:fragment xobj:id="panel_contents">
-        <wx.Button ui.id="button1" x.Button.Label="'Label from attribute'"/>
+    </xobj_fragment>
+    <xobj_fragment xobj_id="panel_contents">
+        <wx.Button ui.id="button1" label="'Label from attribute'"/>
         <wx.Button ui.id="button2" label="'Label2'"/>
-        <xobj:include_xobj_fragment xobj_id="radio_buttons"/>
+        <xobj_include_xobj_fragment xobj_id_ref="radio_buttons"/>
         <wx.GridBagSizer vgap="0" hgap="0">
             <x.GridBagSizer HGap="0" VGap="0"/>
             <wx.GBSizerItem window="x.button1" pos="(0,0)">
@@ -40,8 +38,8 @@
                 <x.GBSizerItem Proportion="1" Flag="wx.ALL" Border="0"/>
             </wx.GBSizerItem>
         </wx.GridBagSizer>
-    </xobj:fragment>
-    <xobj:fragment xobj:id="radio_buttons">
+    </xobj_fragment>
+    <xobj_fragment xobj_id="radio_buttons">
         <wx.Panel ui.id="radio_buttons">
             <wx.RadioButton ui.id="radio_button1" label="'radio1'" style="wx.RB_GROUP"/>
             <wx.RadioButton ui.id="radio_button2" label="'radio2'"/>
@@ -50,5 +48,5 @@
                 <wx.SizerItem window="x.radio_button2" proportion="0" flag="wx.ALL" border="5"/>
             </wx.BoxSizer>
         </wx.Panel>
-    </xobj:fragment>
-</xobj:objects>
+    </xobj_fragment>
+</xobjects>

@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="local/xobj/wxobject"
+           xmlns="local/xobj/wxobject"
+           elementFormDefault="qualified"
+>
+
+    <xs:group name="wxClasses">
+        <xs:choice>
+            <xs:element name="wx.Frame" type="wxFrameType"/>
+            <xs:element name="wx.StatusBar" type="uiidType"/>
+            <xs:element name="wx.MenuBar" type="uiidType"/>
+            <xs:element name="wx.Panel" type="uiidType"/>
+            <xs:element name="wx.Menu" type="wxMenuType"/>
+            <xs:element name="wx.MenuItem" type="wxMenuItemType"/>
+            <xs:element name="wx.Button" type="wxButtonType"/>
+            <xs:element name="wx.GridBagSizer" type="wxGridBagSizerType"/>
+            <xs:element name="wx.GBSizerItem" type="wxGBSizerItemType"/>
+            <xs:element name="wx.BoxSizer" type="wxBoxSizerType"/>
+            <xs:element name="wx.SizerItem" type="wxSizerItemType"/>
+            <xs:element name="wx.RadioButton" type="wxRadioButtonType"/>
+        </xs:choice>
+    </xs:group>
+
+    <xs:group name="xInstances">
+        <xs:choice>
+            <xs:element name="x.Frame"/>
+            <xs:element name="x.StatusBar" type="xStatusBarInstanceType"/>
+            <xs:element name="x.MenuBar"/>
+            <xs:element name="x.Panel"/>
+            <xs:element name="x.Menu"/>
+            <xs:element name="x.MenuItem"/>
+            <xs:element name="x.Button"/>
+            <xs:element name="x.GridBagSizer" type="xGridBagSizerInstanceType"/>
+            <xs:element name="x.GBSizerItem" type="xGridBagSizerItemInstanceType"/>
+            <xs:element name="x.BoxSizer"/>
+            <xs:element name="x.SizerItem"/>
+            <xs:element name="x.RadioButton"/>
+        </xs:choice>
+    </xs:group>
+
+    <xs:complexType name="nestingType">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="xobj_fragment">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="nestingType">
+                            <xs:attribute name="xobj_id" type="xs:string"/>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="xobj_include_xobj_fragment">
+                <xs:complexType>
+                    <xs:attribute name="xobj_id_ref" type="xs:string"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:group ref="wxClasses"/>
+            <xs:group ref="xInstances"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="uiidType">
+        <xs:complexContent>
+            <xs:extension base="nestingType">
+                <xs:attribute name="ui.id"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxWindowType">
+        <xs:complexContent>
+            <xs:extension base="uiidType">
+                <xs:attribute name="parent" type="xs:string"/>
+                <xs:attribute name="id" type="xs:string"/>
+                <xs:attribute name="pos" type="xs:string"/>
+                <xs:attribute name="size" type="xs:string"/>
+                <xs:attribute name="style" type="xs:string"/>
+                <xs:attribute name="name" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxMenuType">
+        <xs:complexContent>
+            <xs:extension base="nestingType">
+                <xs:attribute name="x.MenuBar.Append" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxMenuItemType">
+        <xs:complexContent>
+            <xs:extension base="nestingType">
+                <xs:attribute name="parentMenu" type="xs:string"/>
+                <xs:attribute name="id" type="xs:string"/>
+                <xs:attribute name="text" type="xs:string"/>
+                <xs:attribute name="helpString" type="xs:string"/>
+                <xs:attribute name="kind" type="xs:string"/>
+                <xs:attribute name="subMenu" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxNonOwnedWindowType">
+        <xs:complexContent>
+            <xs:extension base="wxWindowType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxControlType">
+        <xs:complexContent>
+            <xs:extension base="wxWindowType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxTopLevelWindowType">
+        <xs:complexContent>
+            <xs:extension base="wxNonOwnedWindowType">
+                <xs:attribute name="title" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxFrameType">
+        <xs:complexContent>
+            <xs:extension base="wxTopLevelWindowType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxAnyButtonType">
+        <xs:complexContent>
+            <xs:extension base="wxControlType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxButtonType">
+        <xs:complexContent>
+            <xs:extension base="wxAnyButtonType">
+                <xs:attribute name="label" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxRadioButtonType">
+        <xs:complexContent>
+            <xs:extension base="wxControlType">
+                <xs:attribute name="label" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="wxSizerType">
+        <xs:complexContent>
+            <xs:extension base="uiidType">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxBoxSizerType">
+        <xs:complexContent>
+            <xs:extension base="wxSizerType">
+                <xs:attribute name="orient" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxGridSizerType">
+        <xs:complexContent>
+            <xs:extension base="wxSizerType">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxFlexGridSizerType">
+        <xs:complexContent>
+            <xs:extension base="wxGridSizerType">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxGridBagSizerType">
+        <xs:complexContent>
+            <xs:extension base="wxFlexGridSizerType">
+                <xs:attribute name="vgap" type="xs:string"/>
+                <xs:attribute name="hgap" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxSizerItemType">
+        <xs:complexContent>
+            <xs:extension base="nestingType">
+                <xs:attribute name="window" type="xs:string"/>
+                <xs:attribute name="proportion" type="xs:string"/>
+                <xs:attribute name="flag" type="xs:string"/>
+                <xs:attribute name="flags" type="xs:string"/>
+                <xs:attribute name="border" type="xs:string"/>
+                <xs:attribute name="userData" type="xs:string"/>
+                <xs:attribute name="sizer" type="xs:string"/>
+                <xs:attribute name="width" type="xs:string"/>
+                <xs:attribute name="height" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxGBSizerItemType">
+        <xs:complexContent>
+            <xs:extension base="wxSizerItemType">
+                <xs:attribute name="pos" type="xs:string" use="required"/>
+                <xs:attribute name="span" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="xStatusBarInstanceType">
+        <xs:attribute name="StatusText" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="xGridBagSizerInstanceType">
+        <xs:attribute name="HGap" type="xs:string"/>
+        <xs:attribute name="VGap" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="xGridBagSizerItemInstanceType">
+        <xs:attribute name="Proportion" type="xs:string"/>
+        <xs:attribute name="Flag" type="xs:string"/>
+        <xs:attribute name="Border" type="xs:string"/>
+    </xs:complexType>
+
+
+    <xs:element name="xobjects" type="nestingType">
+    </xs:element>
+
+
+</xs:schema>

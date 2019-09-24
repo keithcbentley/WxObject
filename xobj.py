@@ -2,12 +2,6 @@ import re
 
 import xml.etree.ElementTree as ET
 
-xobj_namespace = "http://namespace.xobj.org/xobj"
-
-
-def is_xobj_namespace(xobjtag):
-    return xobjtag.namespace == xobj_namespace
-
 
 class XobjTag:
     default_namespace = None
@@ -68,9 +62,6 @@ class XobjTag:
 class XobjParser:
     def __init__(self, all_namespaces, xobjects):
         self.all_namespaces = all_namespaces
-        if self.all_namespaces is None:
-            self.all_namespaces = {'': xobj_namespace}
-        self.all_namespaces['xobj'] = xobj_namespace
         self.element_tree = None
         self.internal_objects = {}
         self.xobjects = xobjects
@@ -82,11 +73,10 @@ class XobjParser:
         self.process_xml_element(root, skip_root=True)
 
     def create_internal_objects_from_xml(self):
-        internal_elements = self.findall_elements('.//*[@xobj:id]')
+        internal_elements = self.findall_elements('.//*[@xobj_id]')
         # The value of the id attribute is the name.
-        attribute_name = str(XobjTag(xobj_namespace, None, 'id'))
         for internal_element in internal_elements:
-            name = internal_element.attrib[attribute_name]
+            name = internal_element.attrib['xobj_id']
             self.internal_objects[name] = internal_element
 
     def findall_elements(self, xpath):
@@ -98,12 +88,11 @@ class XobjParser:
             self.xobjects.on_element_start(element, this_xobjtag.namespace, this_xobjtag.prefix, this_xobjtag.name)
         for child_element in element:
             child_xobjtag = XobjTag.new_from_string(child_element.tag)
-            if child_xobjtag.namespace == xobj_namespace:
-                if child_xobjtag.name == 'include_xobj_fragment':
-                    nested_element = self.internal_objects[child_element.attrib['xobj_id']]
-                    self.process_xml_element(nested_element, skip_root=True)
-                else:
-                    pass
+            if child_xobjtag.name == 'xobj_include_xobj_fragment':
+                nested_element = self.internal_objects[child_element.attrib['xobj_id_ref']]
+                self.process_xml_element(nested_element, skip_root=True)
+            elif child_xobjtag.name == 'xobj_fragment':
+                pass
             else:
                 self.process_xml_element(child_element)
         if not skip_root:
