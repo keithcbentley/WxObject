@@ -21,6 +21,7 @@
             <xs:element name="wx.RadioButton" type="wxRadioButtonType"/>
             <xs:element name="wx.Image" type="wxImageType"/>
             <xs:element name="wx.StaticBitmap" type="wxStaticBitmapType"/>
+            <xs:element name="wx.TextCtrl" type="wxTextCtrlType"/>
         </xs:choice>
     </xs:group>
 
@@ -40,6 +41,7 @@
             <xs:element name="x.RadioButton"/>
             <xs:element name="x.Image"/>
             <xs:element name="x.StaticBitmap"/>
+            <xs:element name="x.TextCtrl"/>
         </xs:choice>
     </xs:group>
 
@@ -162,6 +164,14 @@
         </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="wxTextCtrlType">
+        <xs:complexContent>
+            <xs:extension base="wxControlType">
+                <xs:attribute name="value" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
 
     <xs:complexType name="wxSizerType">
         <xs:complexContent>
@@ -243,7 +253,6 @@
                 <xs:attribute name="size" type="xs:string"/>
             </xs:extension>
         </xs:complexContent>
-        <
     </xs:complexType>
 
 
