@@ -19,6 +19,7 @@
             <xs:element name="wx.BoxSizer" type="wxBoxSizerType"/>
             <xs:element name="wx.SizerItem" type="wxSizerItemType"/>
             <xs:element name="wx.RadioButton" type="wxRadioButtonType"/>
+            <xs:element name="wx.Image" type="wxImageType"/>
         </xs:choice>
     </xs:group>
 
@@ -36,6 +37,7 @@
             <xs:element name="x.BoxSizer"/>
             <xs:element name="x.SizerItem"/>
             <xs:element name="x.RadioButton"/>
+            <xs:element name="x.Image"/>
         </xs:choice>
     </xs:group>
 
@@ -213,6 +215,27 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
+
+    <xs:complexType name="wxImageType">
+        <xs:complexContent>
+            <xs:extension base="uiidType">
+                <xs:attribute name="width" type="xs:string"/>
+                <xs:attribute name="height" type="xs:string"/>
+                <xs:attribute name="clear" type="xs:string"/>
+                <xs:attribute name="sz" type="xs:string"/>
+                <xs:attribute name="name" type="xs:string"/>
+                <xs:attribute name="type" type="xs:string"/>
+                <xs:attribute name="index" type="xs:string"/>
+                <xs:attribute name="mimetype" type="xs:string"/>
+                <xs:attribute name="stream" type="xs:string"/>
+                <xs:attribute name="data" type="xs:string"/>
+                <xs:attribute name="alpha" type="xs:string"/>
+                <xs:attribute name="size" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+        <
+    </xs:complexType>
+
 
     <xs:complexType name="xStatusBarInstanceType">
         <xs:attribute name="StatusText" type="xs:string"/>
