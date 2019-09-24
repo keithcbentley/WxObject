@@ -8,9 +8,9 @@
     <xs:group name="wxClasses">
         <xs:choice>
             <xs:element name="wx.Frame" type="wxFrameType"/>
-            <xs:element name="wx.StatusBar" type="uiidType"/>
-            <xs:element name="wx.MenuBar" type="uiidType"/>
-            <xs:element name="wx.Panel" type="uiidType"/>
+            <xs:element name="wx.StatusBar" type="wxStatusBarType"/>
+            <xs:element name="wx.MenuBar" type="wxMenuType"/>
+            <xs:element name="wx.Panel" type="wxPanelType"/>
             <xs:element name="wx.Menu" type="wxMenuType"/>
             <xs:element name="wx.MenuItem" type="wxMenuItemType"/>
             <xs:element name="wx.Button" type="wxButtonType"/>
@@ -89,6 +89,18 @@
         </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="wxPanelType">
+        <xs:complexContent>
+            <xs:extension base="wxWindowType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxMenuBarType">
+        <xs:complexContent>
+            <xs:extension base="wxWindowType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
     <xs:complexType name="wxMenuType">
         <xs:complexContent>
             <xs:extension base="nestingType">
@@ -119,6 +131,12 @@
     <xs:complexType name="wxControlType">
         <xs:complexContent>
             <xs:extension base="wxWindowType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="wxStatusBarType">
+        <xs:complexContent>
+            <xs:extension base="wxControlType"/>
         </xs:complexContent>
     </xs:complexType>
 
