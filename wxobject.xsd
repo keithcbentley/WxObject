@@ -31,7 +31,7 @@
             <xs:element name="x.Frame"/>
             <xs:element name="x.StatusBar" type="xStatusBarInstanceType"/>
             <xs:element name="x.MenuBar"/>
-            <xs:element name="x.Panel"/>
+            <xs:element name="x.Panel" type="xPanelInstanceType"/>
             <xs:element name="x.Menu"/>
             <xs:element name="x.MenuItem"/>
             <xs:element name="x.Button"/>
@@ -43,7 +43,7 @@
             <xs:element name="x.Image"/>
             <xs:element name="x.StaticBitmap"/>
             <xs:element name="x.TextCtrl"/>
-            <xs:element name="x.StaticText"/>
+            <xs:element name="x.StaticText" type="xStaticTextInstanceType"/>
         </xs:choice>
     </xs:group>
 
@@ -295,10 +295,39 @@
         </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="xWindowInstanceType">
+        <xs:attribute name="BackgroundColour" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="xPanelInstanceType">
+        <xs:complexContent>
+            <xs:extension base="xWindowInstanceType">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="xControlInstanceType">
+        <xs:complexContent>
+            <xs:extension base="xWindowInstanceType">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
 
     <xs:complexType name="xStatusBarInstanceType">
-        <xs:attribute name="StatusText" type="xs:string"/>
+        <xs:complexContent>
+            <xs:extension base="xControlInstanceType">
+                <xs:attribute name="StatusText" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
+
+    <xs:complexType name="xStaticTextInstanceType">
+        <xs:complexContent>
+            <xs:extension base="xControlInstanceType">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
 
     <xs:complexType name="xGridBagSizerInstanceType">
         <xs:attribute name="HGap" type="xs:string"/>
