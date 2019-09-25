@@ -1,18 +1,17 @@
 <xobjects xmlns="local/xobj/wxobject">
     <wx.Frame ui.id="main_frame" parent="None" title="'Hello World 2'">
-        <wx.Panel>
-            <wx.Image ui.id="image" width="240" height="240"/>
-            <wx.StaticBitmap ui.id="static_bitmap" bitmap="wx.Bitmap(x.image)"/>
-            <wx.Button ui.id="button" label="'Browse'"/>
-            <wx.TextCtrl ui.id="text_ctrl" size="(200,-1)"/>
+        <wx.Panel ui.id="main_panel">
+            <wx.Image ui.id="initial_image" width="x.image_size" height="x.image_size"/>
+            <wx.StaticBitmap ui.id="display_bitmap" bitmap="wx.Bitmap(x.initial_image)"/>
+            <wx.Button ui.id="browse_button" label="'Browse'"/>
+            <wx.TextCtrl ui.id="file_path_ctrl" size="(200,-1)"/>
             <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL">
-                <wx.SizerItem window="x.static_bitmap" proportion="0" flag="wx.ALL" border="5"/>
-                <wx.BoxSizer ui.id="h_sizer" orient="wx.HORIZONTAL">
-                    <wx.SizerItem window="x.button" proportion="0" flag="wx.ALL" border="5"/>
-                    <wx.SizerItem window="x.text_ctrl" proportion="0" flag="wx.ALL" border="7"/>
+                <wx.SizerItem window="x.display_bitmap" proportion="0" flag="wx.ALL" border="5"/>
+                <wx.BoxSizer orient="wx.HORIZONTAL">
+                    <wx.SizerItem window="x.browse_button" proportion="0" flag="wx.ALL" border="5"/>
+                    <wx.SizerItem window="x.file_path_ctrl" proportion="0" flag="wx.ALL" border="7"/>
                 </wx.BoxSizer>
             </wx.BoxSizer>
         </wx.Panel>
-        <x.main_sizer.Fit window="x.Frame"/>
     </wx.Frame>
 </xobjects>

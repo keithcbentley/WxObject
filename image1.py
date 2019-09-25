@@ -1,3 +1,5 @@
+from typing import Optional
+
 import sys
 import os
 
@@ -6,7 +8,7 @@ import wx
 import xobj
 import wxobject
 
-wx_namespace = "http://namespace.xobj.org/xobj/wx"
+wx_namespace = "local/xobj/wxobject"
 
 all_namespaces = {'': wx_namespace,
                   }
@@ -15,7 +17,39 @@ all_namespaces = {'': wx_namespace,
 class ThisUI(wxobject.UI):
     def __init__(self):
         super().__init__()
-        self.main_frame = None
+        self.image_size = 240
+        self.main_frame: Optional[wx.Frame] = None
+        self.main_panel: Optional[wx.Panel] = None
+        self.main_sizer: Optional[wx.BoxSizer] = None
+        self.browse_button: Optional[wx.Button] = None
+        self.file_path_ctrl: Optional[wx.TextCtrl] = None
+        self.display_bitmap: Optional[wx.StaticBitmap] = None
+
+    def load_image(self):
+        file_path = self.file_path_ctrl.GetValue()
+        image = wx.Image(file_path, wx.BITMAP_TYPE_ANY)
+        iwidth = image.GetWidth()
+        iheight = image.GetHeight()
+        if iwidth > iheight:
+            NewW = self.image_size
+            NewH = self.image_size * iheight / iwidth
+        else:
+            NewW = self.image_size * iwidth / iheight
+            NewH = self.image_size
+        simage = image.Scale(NewW, NewH)
+        self.display_bitmap.SetBitmap(wx.Bitmap(simage))
+        self.main_panel.Refresh()
+
+    def on_browse_button(self, event):
+        wildcard = "JPEG files (*.jpg) |*.jpg"
+        with wx.FileDialog(
+                parent=None,
+                message="Choose a file",
+                wildcard=wildcard,
+                style=wx.FD_OPEN) as dialog:
+            if dialog.ShowModal() == wx.ID_OK:
+                self.file_path_ctrl.SetValue(dialog.GetPath())
+                self.load_image()
 
 
 if __name__ == '__main__':
@@ -29,9 +63,11 @@ if __name__ == '__main__':
         # wxobjects.output_codegen = True
         xobj_parser = xobj.XobjParser(all_namespaces, wxobjects)
         app = wx.App()
-
         xobj_parser.instantiate_from_file(file1)
 
+        ui.browse_button.Bind(wx.EVT_BUTTON, ui.on_browse_button)
+
+        ui.main_sizer.Fit(window=ui.main_frame)
         ui.main_frame.Show()
         app.MainLoop()
 
