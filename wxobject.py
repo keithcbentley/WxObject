@@ -380,8 +380,8 @@ class WxObjects:
             thing = funcorprop(*args_eval, **kwargs_eval)
             if needs_var:
                 self.save_ui_object(self.real_variable_name, thing)
-                self.context.add_entry(last, self.real_variable_name, thing)
-                self.context.add_entry('this', self.real_variable_name, thing)
+                self.context.add_entry(TransientVarName(last), self.real_variable_name, thing)
+                self.context.add_entry(TransientVarName('this'), self.real_variable_name, thing)
 
             self.codegen_functioncall(s, args_strings, kwargs_strings, needs_var)
             return self.XCallResult(self.real_variable_name, thing)
@@ -557,7 +557,7 @@ post_call_map = {
     'wx._core.MenuBar': [PostCallEntry('wx.Frame.SetMenuBar', wx.Frame)],
     'wx._core.MenuItem': [PostCallEntry('wx.Menu.Append', wx.Menu)],
     'wx._core.SizerItem': [PostCallEntry('wx.Sizer.Add', wx.Sizer)],
-    'wx._core.Sizer': [PostCallEntry('wx.Window.SetSizer', wx.Window), PostCallEntry('wx.Sizer.Add', wx.Sizer)],
+    'wx._core.Sizer': [PostCallEntry('wx.Window.SetSizer', wx.Window)],
     'wx._core.GBSizerItem': [PostCallEntry('wx.GridBagSizer.Add', wx.GridBagSizer)]
 }
 

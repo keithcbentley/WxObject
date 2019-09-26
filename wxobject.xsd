@@ -253,7 +253,7 @@
 
     <xs:complexType name="wxSizerItemType">
         <xs:complexContent>
-            <xs:extension base="nestingType">
+            <xs:extension base="uiidType">
                 <xs:attribute name="window" type="xs:string"/>
                 <xs:attribute name="proportion" type="xs:string"/>
                 <xs:attribute name="flag" type="xs:string"/>

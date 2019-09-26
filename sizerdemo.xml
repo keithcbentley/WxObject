@@ -2,23 +2,26 @@
     <wx.Frame ui.id="main_frame" parent="None" title="'sizerdemo'">
         <wx.Panel ui.id="main_panel">
             <x.Panel BackgroundColour="wx.Colour(255, 255,0)"/>
-            <wx.StaticText ui.id="statictext1" label="'StaticText1'" style="wx.BORDER_SIMPLE">
-                <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
-            </wx.StaticText>
-            <wx.StaticText ui.id="statictext2" label="'StaticText2'" style="wx.BORDER_SIMPLE">
-                <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
-            </wx.StaticText>
-            <wx.StaticText ui.id="statictext3" label="'StaticText3'" style="wx.BORDER_SIMPLE">
-                <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
-            </wx.StaticText>
-            <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL">
-                <wx.SizerItem window="x.statictext1" proportion="0"
-                              flag="wx.TOP|wx.CENTER" border="10"/>
-                <wx.SizerItem window="x.statictext2" proportion="1"
-                              flag="wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND" border="20"/>
-                <wx.SizerItem window="x.statictext3" proportion="2"
-                              flag="wx.ALIGN_RIGHT"/>
-            </wx.BoxSizer>
+            <wx.Panel ui.id="panel1" style="wx.BORDER_RAISED">
+                <x.Panel BackgroundColour="wx.Colour(200,200,255)"/>
+                <wx.StaticText ui.id="statictext1" label="'StaticText1'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+                <wx.StaticText ui.id="statictext2" label="'StaticText2'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+                <wx.StaticText ui.id="statictext3" label="'StaticText3'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+            </wx.Panel>
         </wx.Panel>
     </wx.Frame>
+    <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.main_panel.SetSizer="x.this">
+        <wx.SizerItem window="x.panel1" proportion="0"/>
+        <wx.BoxSizer orient="wx.HORIZONTAL" x.panel1.SetSizer="x.this">
+            <wx.SizerItem window="x.statictext1" proportion="0"/>
+            <wx.SizerItem window="x.statictext2" proportion="0"/>
+            <wx.SizerItem window="x.statictext3" proportion="0"/>
+        </wx.BoxSizer>
+    </wx.BoxSizer>
 </xobjects>
