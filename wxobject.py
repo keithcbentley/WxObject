@@ -557,7 +557,6 @@ post_call_map = {
     'wx._core.MenuBar': [PostCallEntry('wx.Frame.SetMenuBar', wx.Frame)],
     'wx._core.MenuItem': [PostCallEntry('wx.Menu.Append', wx.Menu)],
     'wx._core.SizerItem': [PostCallEntry('wx.Sizer.Add', wx.Sizer)],
-    'wx._core.Sizer': [PostCallEntry('wx.Window.SetSizer', wx.Window)],
     'wx._core.GBSizerItem': [PostCallEntry('wx.GridBagSizer.Add', wx.GridBagSizer)]
 }
 

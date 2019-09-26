@@ -2,18 +2,8 @@
     <wx.Frame ui.id="main_frame" parent="None" title="'sizerdemo'">
         <wx.Panel ui.id="main_panel">
             <x.Panel BackgroundColour="wx.Colour(255, 255,0)"/>
-            <wx.Panel ui.id="panel1" style="wx.BORDER_RAISED">
-                <x.Panel BackgroundColour="wx.Colour(200,200,255)"/>
-                <wx.StaticText ui.id="statictext1" label="'StaticText1'" style="wx.BORDER_SIMPLE">
-                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
-                </wx.StaticText>
-                <wx.StaticText ui.id="statictext2" label="'StaticText2'" style="wx.BORDER_SIMPLE">
-                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
-                </wx.StaticText>
-                <wx.StaticText ui.id="statictext3" label="'StaticText3'" style="wx.BORDER_SIMPLE">
-                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
-                </wx.StaticText>
-            </wx.Panel>
+            <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.main_panel.SetSizer="x.this"/>
+            <xobj_include_xobj_fragment xobj_id_ref="panel1_xobj"/>
             <wx.Panel ui.id="panel2" style="wx.BORDER_RAISED">
                 <x.Panel BackgroundColour="wx.Colour(255,200,200)"/>
                 <wx.StaticText ui.id="statictext2_1" label="'StaticText2_1'" style="wx.BORDER_SIMPLE">
@@ -28,22 +18,34 @@
             </wx.Panel>
         </wx.Panel>
     </wx.Frame>
-    <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.main_panel.SetSizer="x.this">
-        <wx.SizerItem window="x.panel1" flag="wx.EXPAND" proportion="1"/>
-        <wx.SizerItem window="x.panel2" flag="wx.EXPAND" proportion="1"/>
-    </wx.BoxSizer>
-    <wx.BoxSizer orient="wx.HORIZONTAL" x.panel1.SetSizer="x.this">
-        <wx.SizerItem width="0" height="0" proportion="1"/>
-        <wx.SizerItem window="x.statictext1" proportion="0"/>
-        <wx.SizerItem width="0" height="0" proportion="1"/>
-        <wx.SizerItem window="x.statictext2" proportion="0"/>
-        <wx.SizerItem width="0" height="0" proportion="1"/>
-        <wx.SizerItem window="x.statictext3" proportion="0"/>
-        <wx.SizerItem width="0" height="0" proportion="1"/>
-    </wx.BoxSizer>
+    <wx.SizerItem window="x.panel1" flag="wx.EXPAND" proportion="1" x.main_sizer.Add="x.this"/>
+    <wx.SizerItem window="x.panel2" flag="wx.EXPAND" proportion="1" x.main_sizer.Add="x.this"/>
     <wx.BoxSizer orient="wx.HORIZONTAL" x.panel2.SetSizer="x.this">
         <wx.SizerItem window="x.statictext2_1" proportion="1"/>
         <wx.SizerItem window="x.statictext2_2" flag="wx.CENTER" proportion="2"/>
         <wx.SizerItem window="x.statictext2_3" flag="wx.ALIGN_BOTTOM" proportion="3"/>
     </wx.BoxSizer>
+    <xobj_fragment xobj_id="panel1_xobj">
+        <wx.Panel ui.id="panel1" style="wx.BORDER_RAISED">
+            <x.Panel BackgroundColour="wx.Colour(200,200,255)"/>
+            <wx.StaticText ui.id="statictext1" label="'StaticText1'" style="wx.BORDER_SIMPLE">
+                <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+            </wx.StaticText>
+            <wx.StaticText ui.id="statictext2" label="'StaticText2'" style="wx.BORDER_SIMPLE">
+                <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+            </wx.StaticText>
+            <wx.StaticText ui.id="statictext3" label="'StaticText3'" style="wx.BORDER_SIMPLE">
+                <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+            </wx.StaticText>
+            <wx.BoxSizer orient="wx.HORIZONTAL" x.panel1.SetSizer="x.this">
+                <wx.SizerItem width="0" height="0" proportion="1"/>
+                <wx.SizerItem window="x.statictext1" proportion="0"/>
+                <wx.SizerItem width="0" height="0" proportion="1"/>
+                <wx.SizerItem window="x.statictext2" proportion="0"/>
+                <wx.SizerItem width="0" height="0" proportion="1"/>
+                <wx.SizerItem window="x.statictext3" proportion="0"/>
+                <wx.SizerItem width="0" height="0" proportion="1"/>
+            </wx.BoxSizer>
+        </wx.Panel>
+    </xobj_fragment>
 </xobjects>
