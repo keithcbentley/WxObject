@@ -1,17 +1,30 @@
 <xobjects xmlns="local/xobj/wxobject">
+    <wx.Colour ui.id="internal_yellow" red="255" green="255" blue="0"/>
+    <wx.Colour ui.id="internal_pink" red="255" green="200" blue="200"/>
+    <wx.Colour ui.id="internal_lightgreen" red="200" green="255" blue="200"/>
     <wx.Frame ui.id="main_frame" parent="None" title="'image1'">
         <wx.Panel ui.id="main_panel">
-            <x.Panel BackgroundColour="wx.Colour(255,255,0)"/>
-            <wx.StaticBitmap ui.id="display_bitmap" bitmap="wx.Bitmap(x.current_image)"/>
-            <wx.Button ui.id="browse_button" label="'Browse'"/>
-            <wx.TextCtrl ui.id="file_path_ctrl" size="(200,-1)"/>
-            <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.this.attach_sizer_to_window="x.main_panel">
-                <wx.SizerItem window="x.display_bitmap" proportion="1" flag="wx.ALL | wx.EXPAND" border="5"/>
-                <wx.BoxSizer orient="wx.HORIZONTAL" x.this.add_to_parent_sizer="x.main_sizer">
-                    <wx.SizerItem window="x.browse_button" proportion="0" flag="wx.ALL" border="5"/>
-                    <wx.SizerItem window="x.file_path_ctrl" proportion="1" flag="wx.ALL | wx.EXPAND" border="7"/>
-                </wx.BoxSizer>
-            </wx.BoxSizer>
+            <x.Panel BackgroundColour="x.internal_yellow"/>
+            <wx.Panel ui.id="image_panel">
+                <x.Panel BackgroundColour="x.internal_pink"/>
+                <wx.StaticBitmap ui.id="display_bitmap" bitmap="wx.Bitmap(x.current_image)"/>
+            </wx.Panel>
+            <wx.Panel ui.id="control_panel">
+                <x.Panel BackgroundColour="x.internal_lightgreen"/>
+                <wx.Button ui.id="browse_button" label="'Browse'"/>
+                <wx.TextCtrl ui.id="file_path_ctrl" size="(200,-1)"/>
+            </wx.Panel>
         </wx.Panel>
     </wx.Frame>
+    <wx.BoxSizer orient="wx.VERTICAL" x.this.attach_sizer_to_window="x.main_panel">
+        <wx.SizerItem window="x.image_panel" flag="wx.EXPAND" proportion="1"/>
+        <wx.SizerItem window="x.control_panel" flag="wx.EXPAND"/>
+        <wx.BoxSizer x.this.attach_sizer_to_window="x.image_panel">
+            <wx.SizerItem window="x.display_bitmap" proportion="1" flag="wx.ALL|wx.EXPAND" border="5"/>
+        </wx.BoxSizer>
+        <wx.BoxSizer x.this.attach_sizer_to_window="x.control_panel">
+            <wx.SizerItem window="x.browse_button" proportion="0" flag="wx.ALL" border="5"/>
+            <wx.SizerItem window="x.file_path_ctrl" proportion="1" flag="wx.ALL" border="7"/>
+        </wx.BoxSizer>
+    </wx.BoxSizer>
 </xobjects>

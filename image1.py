@@ -21,7 +21,8 @@ class ThisUI(wxobject.UI):
         self.current_image = wx.Image(width=self.image_size, height=self.image_size)
         self.main_frame: Optional[wx.Frame] = None
         self.main_panel: Optional[wx.Panel] = None
-        self.main_sizer: Optional[wx.BoxSizer] = None
+        self.image_panel: Optional[wx.Panel] = None
+        self.control_panel: Optional[wx.Panel] = None
         self.browse_button: Optional[wx.Button] = None
         self.file_path_ctrl: Optional[wx.TextCtrl] = None
         self.display_bitmap: Optional[wx.StaticBitmap] = None
@@ -67,8 +68,7 @@ if __name__ == '__main__':
         xobj_parser.instantiate_from_file(file1)
 
         ui.browse_button.Bind(wx.EVT_BUTTON, ui.on_browse_button)
-
-        ui.main_sizer.Fit(window=ui.main_frame)
+        ui.main_frame.Layout()
         ui.main_frame.Show()
         app.MainLoop()
 

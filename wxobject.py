@@ -350,7 +350,7 @@ class WxObjects:
 
     def save_ui_object(self, name, obj):
         existing = None
-        if not name.startswith('internal_var'):
+        if not name.startswith('internal_'):
             try:
                 existing = self.ui.__getattribute__(name)
             except AttributeError:
