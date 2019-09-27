@@ -50,6 +50,16 @@ class SizerAlreadyHasWindow(WxObjectError):
     pass
 
 
+class UiAttributeNotFound(WxObjectError):
+    def __init__(self, attribute_name):
+        super().__init__('UI Attribute Not Found: ' + attribute_name)
+
+
+class UiAttributeAlreadyInUse(WxObjectError):
+    def __init__(self, attribute_name):
+        super().__init__('UI Attribute Already In Use: ' + attribute_name)
+
+
 class FrameEntry:
     def __init__(self, any_var_name: AnyVarName, real_var_name: RealVarName, obj):
         super().__init__()
@@ -218,17 +228,17 @@ class WxObjects:
         if uiid is not None:
             self.real_variable_name = uiid
             return
-        self.real_variable_name = 'var{n}'.format(n=self.variable_counter)
+        self.real_variable_name = 'internal_var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
 
-    def output_codegen_line(self, line, indent):
+    def output_codegen_line(self, line: str, indent: int) -> None:
         while indent > 0:
             print('    ', end='')
             indent -= 1
         print(line)
         pass
 
-    def output_codegen_header(self):
+    def output_codegen_header(self) -> None:
         self.output_codegen_line('import wx', 0)
         self.output_codegen_line('import WxPythonEnhancements', 0)
         self.output_codegen_line('', 0)
@@ -237,7 +247,7 @@ class WxObjects:
         self.output_codegen_line('def __init__(self):', 1)
         self.output_codegen_line('super().__init__()', 2)
 
-    def output_codegen_trailer(self):
+    def output_codegen_trailer(self) -> None:
         self.output_codegen_line('', 0)
         self.output_codegen_line('', 0)
         self.output_codegen_line("if __name__ == '__main__':", 0)
@@ -250,7 +260,7 @@ class WxObjects:
         self.output_codegen_line('', 0)
         self.output_codegen_line('main()', 1)
 
-    def output_codegen(self):
+    def output_codegen(self) -> None:
         self.output_codegen_header()
         for line in self.codegen_lines:
             self.output_codegen_line(line, 2)
@@ -360,6 +370,14 @@ class WxObjects:
         self.codegen_add_line(property_string)
 
     def save_ui_object(self, name, obj):
+        existing = None
+        if not name.startswith('internal_var'):
+            try:
+                existing = self.ui.__getattribute__(name)
+            except AttributeError:
+                raise UiAttributeNotFound(name)
+        if existing is not None:
+            raise UiAttributeAlreadyInUse(name)
         self.ui.__setattr__(name, obj)
 
     def xeval(self, str_to_eval):

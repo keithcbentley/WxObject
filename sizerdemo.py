@@ -16,6 +16,16 @@ if __name__ == '__main__':
         def __init__(self):
             super().__init__()
             self.main_frame = None
+            self.main_panel = None
+            self.main_sizer = None
+            self.panel1 = None
+            self.panel2 = None
+            self.statictext1 = None
+            self.statictext2 = None
+            self.statictext3 = None
+            self.statictext2_1 = None
+            self.statictext2_2 = None
+            self.statictext2_3 = None
 
 
     def main():
