@@ -43,10 +43,10 @@ class WxPythonEnhancements:
             if old_window is not None:
                 print('window is already set on sizer')
                 return
-        except:
+        except AttributeError:
             pass
-        WxPythonEnhancements.set_sizer_old(*args, **kwargs)
         sizer.sizer_set_to(window)
+        WxPythonEnhancements.set_sizer_old(*args, **kwargs)
 
     @staticmethod
     def sizer_set_to(sizer, window):

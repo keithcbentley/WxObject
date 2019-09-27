@@ -37,13 +37,25 @@ class UI:
     pass
 
 
+class WxObjectError(Exception):
+    pass
+
+
+class WindowAlreadyHasSizer(WxObjectError):
+    pass
+
+
+class SizerAlreadyHasWindow(WxObjectError):
+    pass
+
+
 class WxPythonEnhancements:
-    set_sizer_old = wx.Window.SetSizer
+    set_sizer_original = wx.Window.SetSizer
 
     @staticmethod
-    def my_set_sizer(*args, **kwargs):
-        window = None
-        sizer = None
+    def wxpe_set_sizer(*args, **kwargs):
+        window: Optional[wx.Window] = None
+        sizer: Optional[wx.Sizer] = None
         if len(args) > 0:
             window = args[0]
         if len(args) > 1:
@@ -54,30 +66,30 @@ class WxPythonEnhancements:
             sizer = kwargs['sizer']
 
         if window.GetSizer() is not None:
-            print('Window already has sizer')
-            return
+            raise WindowAlreadyHasSizer
+        # Call this before calling the original so that the
+        # sizer can check if it's already been attached.
+        sizer.sizer_attaching_to_window(window)
+        WxPythonEnhancements.set_sizer_original(*args, **kwargs)
+
+    @staticmethod
+    def wxpe_sizer_attaching_to_window(sizer: wx.Sizer, window: wx.Window):
         try:
-            old_window = sizer.window
+            old_window = sizer.attaching_window
             if old_window is not None:
-                print('window is already set on sizer')
-                return
-        except:
+                raise SizerAlreadyHasWindow
+        except AttributeError:
             pass
-        WxPythonEnhancements.set_sizer_old(*args, **kwargs)
-        sizer.sizer_set_to(window)
+        setattr(sizer, 'attaching_window', window)
 
     @staticmethod
-    def sizer_set_to(sizer, window):
-        setattr(sizer, 'window', window)
-
-    @staticmethod
-    def attach_sizer_to_window(sizer, window):
+    def attach_sizer_to_window(sizer: wx.Sizer, window: wx.Window):
         window.SetSizer(sizer)
 
 
 class WxPythonEnhancer:
-    wx.Window.SetSizer = WxPythonEnhancements.my_set_sizer
-    setattr(wx.Sizer, 'sizer_set_to', WxPythonEnhancements.sizer_set_to)
+    wx.Window.SetSizer = WxPythonEnhancements.wxpe_set_sizer
+    setattr(wx.Sizer, 'sizer_attaching_to_window', WxPythonEnhancements.wxpe_sizer_attaching_to_window)
     setattr(wx.Sizer, 'attach_sizer_to_window', WxPythonEnhancements.attach_sizer_to_window)
 
 
@@ -275,7 +287,8 @@ class WxObjects:
         # TODO validate that the name is actually on the ui object.
         return RealVarName('x.' + name)
 
-    def xname_replacement(self, original_str: str, replacement_method) -> str:
+    @staticmethod
+    def xname_replacement(original_str: str, replacement_method) -> str:
         # fullx is everything that ends in x. x is just the end part.
         # If they are the same, it's a single x.name
         # pattern
@@ -310,44 +323,10 @@ class WxObjects:
                 remainder = remainder[replace_end:]
 
     def codegen_xname_replacement(self, original_str: str) -> str:
-        return self.xname_replacement(original_str, self.codegen_get_replace_variable_name)
+        return WxObjects.xname_replacement(original_str, self.codegen_get_replace_variable_name)
 
     def runtime_xname_replacement(self, original_str: str) -> str:
-        return self.xname_replacement(original_str, self.runtime_get_replace_variable_name)
-
-    def codegen_xname_replacement1(self, original_str: str) -> str:
-        # fullx is everything that ends in x. x is just the end part.
-        # If they are the same, it's a single x.name
-        # pattern
-        #    grab everything that looks like: prefix_ends_in_x.name
-        #    inside the prefix_ends_in_x part, grab just the x part.
-        pattern = r"""(?P<fullx>[a-zA-z0-9_]*(?P<x>x\.(?P<name>[a-zA-Z0-9_]+)))"""
-        # Build up the new string by skipping or replacing items.
-        new = ''
-        remainder = original_str
-        while True:
-            # IMPORTANT be sure to use search, not match.
-            # match only matches at the beginning of the string.
-            result = re_search(pattern, remainder)
-            if result is None:
-                # Nothing (remaining) to skip or replace.
-                return new + remainder
-
-            # Not a "real" x name.  Skip over it.
-            if result['fullx'] != result['x']:
-                skip_end = result.span('fullx')[1]
-                skipped = remainder[0:skip_end]
-                new = new + skipped
-                remainder = remainder[skip_end:]
-            else:
-                # Got a real x match, do the replacement.
-                replace_start = result.span('x')[0]
-                replace_end = result.span('x')[1]
-                old_name = TransientVarName(result['name'])  # assume it's transient.
-                new_name = self.codegen_get_replace_variable_name(old_name)
-                replaced = remainder[0:replace_start] + new_name
-                new = new + replaced
-                remainder = remainder[replace_end:]
+        return WxObjects.xname_replacement(original_str, self.runtime_get_replace_variable_name)
 
     def codegen_functioncall(self, function_name_string, args, kwargs, needs_var):
         positional_args_string = ''
