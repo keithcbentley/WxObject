@@ -18,6 +18,7 @@ class ThisUI(wxobject.UI):
     def __init__(self):
         super().__init__()
         self.image_size = 240
+        self.current_image = wx.Image(width=self.image_size, height=self.image_size)
         self.main_frame: Optional[wx.Frame] = None
         self.main_panel: Optional[wx.Panel] = None
         self.main_sizer: Optional[wx.BoxSizer] = None

@@ -1,6 +1,7 @@
 from typing import NewType, Optional, Type, Iterable, Union
 from re import search as re_search, match as re_match, fullmatch as re_fullmatch
 import wx
+import WxObjectException
 import WxPythonEnhancements
 
 RealVarName = NewType('RealVarName', str)
@@ -36,28 +37,6 @@ def dump(header, obj):
 
 class UI:
     pass
-
-
-class WxObjectError(Exception):
-    pass
-
-
-class WindowAlreadyHasSizer(WxObjectError):
-    pass
-
-
-class SizerAlreadyHasWindow(WxObjectError):
-    pass
-
-
-class UiAttributeNotFound(WxObjectError):
-    def __init__(self, attribute_name):
-        super().__init__('UI Attribute Not Found: ' + attribute_name)
-
-
-class UiAttributeAlreadyInUse(WxObjectError):
-    def __init__(self, attribute_name):
-        super().__init__('UI Attribute Already In Use: ' + attribute_name)
 
 
 class FrameEntry:
@@ -375,9 +354,9 @@ class WxObjects:
             try:
                 existing = self.ui.__getattribute__(name)
             except AttributeError:
-                raise UiAttributeNotFound(name)
+                raise WxObjectException.UiAttributeNotFound(name)
         if existing is not None:
-            raise UiAttributeAlreadyInUse(name)
+            raise WxObjectException.UiAttributeAlreadyInUse(name)
         self.ui.__setattr__(name, obj)
 
     def xeval(self, str_to_eval):
@@ -598,14 +577,15 @@ if __name__ == '__main__':
     class ThisUi(UI):
         def __init__(self):
             super().__init__()
-            self.main_window = None
+            self.main_frame = None
+            self.button1 = None
+            self.button2 = None
 
 
     def main():
         app = wx.App(redirect=False)
         ui = ThisUi()
         xobjects = WxObjects(ui)
-        xobjects.output_codegen = True
 
         # BEGIN FRAME
         attribs = {'ui.id': 'main_frame', 'parent': 'None', 'title': '"Hello Frame"'}
@@ -673,10 +653,9 @@ if __name__ == '__main__':
         xobjects.xcall_attribs('x.this', attribs)
         # END SIZER
 
-        xobjects.main_frame.Show()
+        xobjects.output_codegen()
 
-        #    xobjects.button1.Label = 'New Label'
-        #    xobjects.xcall('x.button2.Label', ('Label from xcall'), {})
+        ui.main_frame.Show()
 
         app.MainLoop()
 
