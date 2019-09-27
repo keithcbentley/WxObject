@@ -18,7 +18,9 @@ def dump(header, obj):
         else:
             print('  ', key, '--->>>', val, 'type: ', type(val))
     # If obj is a type, call mro on it directly.
-    if isinstance(obj, type):
+    if type(obj) == type:
+        mro = obj.mro(type)
+    elif isinstance(obj, type):
         mro = obj.mro()
     else:
         mro = obj.__class__.mro()
@@ -33,6 +35,50 @@ def dump(header, obj):
 
 class UI:
     pass
+
+
+class WxPythonEnhancements:
+    set_sizer_old = wx.Window.SetSizer
+
+    @staticmethod
+    def my_set_sizer(*args, **kwargs):
+        window = None
+        sizer = None
+        if len(args) > 0:
+            window = args[0]
+        if len(args) > 1:
+            sizer = args[1]
+        if window is None:
+            window = kwargs['window']
+        if sizer is None:
+            sizer = kwargs['sizer']
+
+        if window.GetSizer() is not None:
+            print('Window already has sizer')
+            return
+        try:
+            old_window = sizer.window
+            if old_window is not None:
+                print('window is already set on sizer')
+                return
+        except:
+            pass
+        WxPythonEnhancements.set_sizer_old(*args, **kwargs)
+        sizer.sizer_set_to(window)
+
+    @staticmethod
+    def sizer_set_to(sizer, window):
+        setattr(sizer, 'window', window)
+
+    @staticmethod
+    def attach_sizer_to_window(sizer, window):
+        window.SetSizer(sizer)
+
+
+class WxPythonEnhancer:
+    wx.Window.SetSizer = WxPythonEnhancements.my_set_sizer
+    setattr(wx.Sizer, 'sizer_set_to', WxPythonEnhancements.sizer_set_to)
+    setattr(wx.Sizer, 'attach_sizer_to_window', WxPythonEnhancements.attach_sizer_to_window)
 
 
 class FrameEntry:

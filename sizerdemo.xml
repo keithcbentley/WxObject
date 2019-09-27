@@ -2,7 +2,7 @@
     <wx.Frame ui.id="main_frame" parent="None" title="'sizerdemo'">
         <wx.Panel ui.id="main_panel">
             <x.Panel BackgroundColour="wx.Colour(255, 255,0)"/>
-            <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.main_panel.SetSizer="x.this"/>
+            <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.this.attach_sizer_to_window="x.main_panel"/>
             <xobj_include_xobj_fragment xobj_id_ref="panel1_xobj"/>
             <wx.Panel ui.id="panel2" style="wx.BORDER_RAISED">
                 <x.Panel BackgroundColour="wx.Colour(255,200,200)"/>
@@ -20,7 +20,7 @@
     </wx.Frame>
     <wx.SizerItem window="x.panel1" flag="wx.EXPAND" proportion="1" x.main_sizer.Add="x.this"/>
     <wx.SizerItem window="x.panel2" flag="wx.EXPAND" proportion="1" x.main_sizer.Add="x.this"/>
-    <wx.BoxSizer orient="wx.HORIZONTAL" x.panel2.SetSizer="x.this">
+    <wx.BoxSizer orient="wx.HORIZONTAL" x.this.attach_sizer_to_window="x.panel2">
         <wx.SizerItem window="x.statictext2_1" proportion="1"/>
         <wx.SizerItem window="x.statictext2_2" flag="wx.CENTER" proportion="2"/>
         <wx.SizerItem window="x.statictext2_3" flag="wx.ALIGN_BOTTOM" proportion="3"/>
