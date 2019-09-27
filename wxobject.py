@@ -1,6 +1,7 @@
 from typing import NewType, Optional, Type, Iterable, Union
 from re import search as re_search, match as re_match, fullmatch as re_fullmatch
 import wx
+import WxPythonEnhancements
 
 RealVarName = NewType('RealVarName', str)
 TransientVarName = NewType('TransientVarName', str)
@@ -47,50 +48,6 @@ class WindowAlreadyHasSizer(WxObjectError):
 
 class SizerAlreadyHasWindow(WxObjectError):
     pass
-
-
-class WxPythonEnhancements:
-    set_sizer_original = wx.Window.SetSizer
-
-    @staticmethod
-    def wxpe_set_sizer(*args, **kwargs):
-        window: Optional[wx.Window] = None
-        sizer: Optional[wx.Sizer] = None
-        if len(args) > 0:
-            window = args[0]
-        if len(args) > 1:
-            sizer = args[1]
-        if window is None:
-            window = kwargs['window']
-        if sizer is None:
-            sizer = kwargs['sizer']
-
-        if window.GetSizer() is not None:
-            raise WindowAlreadyHasSizer
-        # Call this before calling the original so that the
-        # sizer can check if it's already been attached.
-        sizer.sizer_attaching_to_window(window)
-        WxPythonEnhancements.set_sizer_original(*args, **kwargs)
-
-    @staticmethod
-    def wxpe_sizer_attaching_to_window(sizer: wx.Sizer, window: wx.Window):
-        try:
-            old_window = sizer.attaching_window
-            if old_window is not None:
-                raise SizerAlreadyHasWindow
-        except AttributeError:
-            pass
-        setattr(sizer, 'attaching_window', window)
-
-    @staticmethod
-    def attach_sizer_to_window(sizer: wx.Sizer, window: wx.Window):
-        window.SetSizer(sizer)
-
-
-class WxPythonEnhancer:
-    wx.Window.SetSizer = WxPythonEnhancements.wxpe_set_sizer
-    setattr(wx.Sizer, 'sizer_attaching_to_window', WxPythonEnhancements.wxpe_sizer_attaching_to_window)
-    setattr(wx.Sizer, 'attach_sizer_to_window', WxPythonEnhancements.attach_sizer_to_window)
 
 
 class FrameEntry:
@@ -243,7 +200,7 @@ class WxObjects:
         self.context = Context()
         self.variable_counter = 0
         self.real_variable_name: RealVarName = RealVarName('')
-        self.output_codegen = False
+        self.codegen_lines = []
 
         self.xenv = {
             'wx': wx,
@@ -264,9 +221,43 @@ class WxObjects:
         self.real_variable_name = 'var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
 
-    def codegen_output_line(self, output_string: str) -> None:
-        if self.output_codegen:
-            print(output_string)
+    def output_codegen_line(self, line, indent):
+        while indent > 0:
+            print('    ', end='')
+            indent -= 1
+        print(line)
+        pass
+
+    def output_codegen_header(self):
+        self.output_codegen_line('import wx', 0)
+        self.output_codegen_line('import WxPythonEnhancements', 0)
+        self.output_codegen_line('', 0)
+        self.output_codegen_line('', 0)
+        self.output_codegen_line('class ThisUI:', 0)
+        self.output_codegen_line('def __init__(self):', 1)
+        self.output_codegen_line('super().__init__()', 2)
+
+    def output_codegen_trailer(self):
+        self.output_codegen_line('', 0)
+        self.output_codegen_line('', 0)
+        self.output_codegen_line("if __name__ == '__main__':", 0)
+        self.output_codegen_line('def main():', 1)
+        self.output_codegen_line('app = wx.App()', 2)
+        self.output_codegen_line('ui = ThisUI()', 2)
+        self.output_codegen_line('ui.main_frame.Show()', 2)
+        self.output_codegen_line('app.MainLoop()', 2)
+        self.output_codegen_line('', 0)
+        self.output_codegen_line('', 0)
+        self.output_codegen_line('main()', 1)
+
+    def output_codegen(self):
+        self.output_codegen_header()
+        for line in self.codegen_lines:
+            self.output_codegen_line(line, 2)
+        self.output_codegen_trailer()
+
+    def codegen_add_line(self, output_string: str) -> None:
+        self.codegen_lines.append(output_string)
 
     def codegen_get_current_variable_name(self) -> CodegenVarName:
         return CodegenVarName('self.' + self.real_variable_name)
@@ -357,7 +348,7 @@ class WxObjects:
             positional=positional_args_string,
             separator=separator,
             kw=kwargs_string)
-        self.codegen_output_line(function_call_string)
+        self.codegen_add_line(function_call_string)
 
     def codegen_property(self, obj, name, value):
         property_template = '{obj_name}.{property_name}={value}'
@@ -366,7 +357,7 @@ class WxObjects:
             property_name=name,
             value=self.codegen_xname_replacement(value)
         )
-        self.codegen_output_line(property_string)
+        self.codegen_add_line(property_string)
 
     def save_ui_object(self, name, obj):
         self.ui.__setattr__(name, obj)

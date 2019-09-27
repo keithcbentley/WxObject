@@ -25,10 +25,10 @@ if __name__ == '__main__':
         file1 = os.path.join(own_dir, 'sizerdemo.xml')
         ui = ThisUi()
         wxobjects = wxobject.WxObjects(ui)
-        #wxobjects.output_codegen = True
         xobj_parser = xobj.XobjParser(all_namespaces, wxobjects)
         app = wx.App()
         xobj_parser.instantiate_from_file(file1)
+        wxobjects.output_codegen()
         ui.main_frame.Show()
         app.MainLoop()
 
