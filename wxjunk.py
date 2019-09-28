@@ -27,38 +27,6 @@ def dump(header, obj):
                 print('    ', key, '--->>>', val, 'type: ', type(val))
 
 
-class WxPythonEnhancements:
-    set_sizer_old = wx.Window.SetSizer
-
-    @staticmethod
-    def my_set_sizer(*args, **kwargs):
-        print('my_set_sizer', args, kwargs)
-        window = args[0]
-        sizer = args[1]
-        if window.GetSizer() is not None:
-            print('Window already has sizer')
-            return
-        try:
-            old_window = sizer.window
-            if old_window is not None:
-                print('window is already set on sizer')
-                return
-        except AttributeError:
-            pass
-        sizer.sizer_set_to(window)
-        WxPythonEnhancements.set_sizer_old(*args, **kwargs)
-
-    @staticmethod
-    def sizer_set_to(sizer, window):
-        print('sizer_set_to:', sizer, window)
-        setattr(sizer, 'window', window)
-
-
-class WxPythonEnhancer:
-    wx.Window.SetSizer = WxPythonEnhancements.my_set_sizer
-    setattr(wx.Sizer, 'sizer_set_to', WxPythonEnhancements.sizer_set_to)
-
-
 def main():
     app = wx.App()
     frame = wx.Frame(parent=None, title='wxjunk')
@@ -74,10 +42,10 @@ def main():
     panel.SetSizer(sizer)
     sizer.Add(panel2, flag=wx.EXPAND)
     sizer2 = wx.BoxSizer(orient=wx.VERTICAL)
-#    panel2.SetSizer(sizer2)
-    sizer.Add(sizer2)
+    panel2.SetSizer(sizer2)
     sizer2.Add(radio1)
     sizer2.Add(radio2)
+#    sizer.Add(sizer2)
     frame.Show()
     app.MainLoop()
 

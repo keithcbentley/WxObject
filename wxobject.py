@@ -1,4 +1,6 @@
-from typing import NewType, Optional, Type, Iterable, Union
+from typing import NewType, Optional, Type, Iterable, Union, TextIO
+import sys
+import os
 from re import search as re_search, match as re_match, fullmatch as re_fullmatch
 import wx
 import WxObjectException
@@ -210,40 +212,46 @@ class WxObjects:
         self.real_variable_name = 'internal_var{n}'.format(n=self.variable_counter)
         self.variable_counter += 1
 
-    def output_codegen_line(self, line: str, indent: int) -> None:
+    def output_codegen_line(self, line: str, indent: int, file: TextIO) -> None:
         while indent > 0:
-            print('    ', end='')
+            file.write('    ')
             indent -= 1
-        print(line)
-        pass
+        file.write(line)
+        file.write('\n')
 
-    def output_codegen_header(self) -> None:
-        self.output_codegen_line('import wx', 0)
-        self.output_codegen_line('import WxPythonEnhancements', 0)
-        self.output_codegen_line('', 0)
-        self.output_codegen_line('', 0)
-        self.output_codegen_line('class ThisUI:', 0)
-        self.output_codegen_line('def __init__(self):', 1)
-        self.output_codegen_line('super().__init__()', 2)
+    def output_codegen_header(self, file: TextIO) -> None:
+        self.output_codegen_line('import wx', 0, file)
+        self.output_codegen_line('import WxPythonEnhancements', 0, file)
+        self.output_codegen_line('', 0, file)
+        self.output_codegen_line('', 0, file)
+        self.output_codegen_line('class ThisUI:', 0, file)
+        self.output_codegen_line('def __init__(self):', 1, file)
+        self.output_codegen_line('super().__init__()', 2, file)
 
-    def output_codegen_trailer(self) -> None:
-        self.output_codegen_line('', 0)
-        self.output_codegen_line('', 0)
-        self.output_codegen_line("if __name__ == '__main__':", 0)
-        self.output_codegen_line('def main():', 1)
-        self.output_codegen_line('app = wx.App()', 2)
-        self.output_codegen_line('ui = ThisUI()', 2)
-        self.output_codegen_line('ui.main_frame.Show()', 2)
-        self.output_codegen_line('app.MainLoop()', 2)
-        self.output_codegen_line('', 0)
-        self.output_codegen_line('', 0)
-        self.output_codegen_line('main()', 1)
+    def output_codegen_trailer(self, file: TextIO) -> None:
+        self.output_codegen_line('', 0, file)
+        self.output_codegen_line('', 0, file)
+        self.output_codegen_line("if __name__ == '__main__':", 0, file)
+        self.output_codegen_line('def main():', 1, file)
+        self.output_codegen_line('app = wx.App()', 2, file)
+        self.output_codegen_line('ui = ThisUI()', 2, file)
+        self.output_codegen_line('ui.main_frame.Show()', 2, file)
+        self.output_codegen_line('app.MainLoop()', 2, file)
+        self.output_codegen_line('', 0, file)
+        self.output_codegen_line('', 0, file)
+        self.output_codegen_line('main()', 1, file)
 
-    def output_codegen(self) -> None:
-        self.output_codegen_header()
-        for line in self.codegen_lines:
-            self.output_codegen_line(line, 2)
-        self.output_codegen_trailer()
+    def output_codegen(self, filename) -> None:
+        my_module = sys.modules[__name__]
+        file = my_module.__file__
+        own_dir = os.path.dirname(file)
+        full_filename = os.path.join(own_dir, filename)
+
+        with open(full_filename, 'wt') as file:
+            self.output_codegen_header(file)
+            for line in self.codegen_lines:
+                self.output_codegen_line(line, 2, file)
+            self.output_codegen_trailer(file)
 
     def codegen_add_line(self, output_string: str) -> None:
         self.codegen_lines.append(output_string)

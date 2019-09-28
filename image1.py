@@ -85,12 +85,11 @@ if __name__ == '__main__':
         own_dir = os.path.dirname(file)
         file1 = os.path.join(own_dir, 'image1.xml')
         ui = ThisUI()
-        wxobjects = wxobject.WxObjects(ui)
-        # wxobjects.output_codegen = True
-        xobj_parser = xobj.XobjParser(all_namespaces, wxobjects)
+        wxo = wxobject.WxObjects(ui)
+        xobj_parser = xobj.XobjParser(all_namespaces, wxo)
         app = wx.App()
         xobj_parser.instantiate_from_file(file1)
-
+        wxo.output_codegen('image1_generated.py')
         ui.browse_button.Bind(wx.EVT_BUTTON, ui.on_browse_button)
         ui.display_bitmap_panel.Bind(wx.EVT_SIZE, ui.on_display_bitmap_panel_size)
         ui.main_frame.Show()
