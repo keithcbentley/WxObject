@@ -18,7 +18,7 @@ class ThisUI(wxobject.UI):
     def __init__(self):
         super().__init__()
         self.available_bitmap_dimension = None
-        self.current_image = wx.Image(width=100, height=100)    # just a blank image to start
+        self.current_image = None
         self.main_frame: Optional[wx.Frame] = None
         self.main_panel: Optional[wx.Panel] = None
         self.image_panel: Optional[wx.Panel] = None
@@ -32,6 +32,11 @@ class ThisUI(wxobject.UI):
         # A separate panel around the bitmap is used to make resizing
         # the image easier.  If you try to use the bitmap directly, it
         # leads to recursion issues that complicate things.
+
+
+class AppUI(ThisUI):
+    def __init__(self):
+        super().__init__()
 
     def load_scaled_image_to_display_bitmap(self):
         bitmap_width = self.available_bitmap_dimension[0]
@@ -84,7 +89,7 @@ if __name__ == '__main__':
         file = my_module.__file__
         own_dir = os.path.dirname(file)
         file1 = os.path.join(own_dir, 'image1.xml')
-        ui = ThisUI()
+        ui = AppUI()
         wxo = wxobject.WxObjects(ui)
         xobj_parser = xobj.XobjParser(all_namespaces, wxo)
         app = wx.App()

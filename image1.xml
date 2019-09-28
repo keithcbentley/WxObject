@@ -2,6 +2,8 @@
     <wx.Colour ui.id="internal_yellow" red="255" green="255" blue="0"/>
     <wx.Colour ui.id="internal_pink" red="255" green="200" blue="200"/>
     <wx.Colour ui.id="internal_lightgreen" red="200" green="255" blue="200"/>
+    <wx.Image ui.id="current_image" width="100" height="100"/>
+
     <wx.Frame ui.id="main_frame" parent="None" title="'image1'">
         <wx.Panel ui.id="main_panel">
             <wx.Panel ui.id="image_panel">
