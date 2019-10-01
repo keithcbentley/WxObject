@@ -14,9 +14,10 @@
             <xs:element name="wx.Menu" type="wxMenuType"/>
             <xs:element name="wx.MenuItem" type="wxMenuItemType"/>
             <xs:element name="wx.Button" type="wxButtonType"/>
+            <xs:element name="wx.BoxSizer" type="wxBoxSizerType"/>
+            <xs:element name="wx.GridSizer" type="wxGridSizerType"/>
             <xs:element name="wx.GridBagSizer" type="wxGridBagSizerType"/>
             <xs:element name="wx.GBSizerItem" type="wxGBSizerItemType"/>
-            <xs:element name="wx.BoxSizer" type="wxBoxSizerType"/>
             <xs:element name="wx.SizerItem" type="wxSizerItemType"/>
             <xs:element name="wx.RadioButton" type="wxRadioButtonType"/>
             <xs:element name="wx.Image" type="wxImageType"/>
@@ -231,6 +232,11 @@
     <xs:complexType name="wxGridSizerType">
         <xs:complexContent>
             <xs:extension base="wxSizerType">
+                <xs:attribute name="rows" type="xs:string"/>
+                <xs:attribute name="cols" type="xs:string"/>
+                <xs:attribute name="gap" type="xs:string"/>
+                <xs:attribute name="vgap" type="xs:string"/>
+                <xs:attribute name="hgap" type="xs:string"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -245,8 +251,6 @@
     <xs:complexType name="wxGridBagSizerType">
         <xs:complexContent>
             <xs:extension base="wxFlexGridSizerType">
-                <xs:attribute name="vgap" type="xs:string"/>
-                <xs:attribute name="hgap" type="xs:string"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

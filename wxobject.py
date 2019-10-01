@@ -340,7 +340,7 @@ class WxObjects:
 
         function_call_template = '{variable}{s}({positional}{separator}{kw})'
         function_call_string = function_call_template.format(
-            variable=self.codegen_get_current_variable_name() + '=' if needs_var else '',
+            variable=self.codegen_get_current_variable_name() + ' = ' if needs_var else '',
             s=self.codegen_xname_replacement(function_name_string),
             positional=positional_args_string,
             separator=separator,

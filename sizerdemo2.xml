@@ -1,0 +1,40 @@
+<xobjects xmlns="local/xobj/wxobject">
+    <wx.Frame ui.id="main_frame" parent="None" title="'sizerdemo'">
+        <wx.Panel ui.id="main_panel">
+            <x.Panel BackgroundColour="wx.Colour(255, 255,0)"/>
+            <wx.Panel ui.id="panel1" style="wx.BORDER_RAISED">
+                <x.Panel BackgroundColour="wx.Colour(200, 255, 200)"/>
+                <wx.StaticText ui.id="statictext1_1" label="'StaticText1_1'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+                <wx.StaticText ui.id="statictext1_2" label="'StaticText1_2'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+                <wx.StaticText ui.id="statictext1_3" label="'StaticText1_3'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+
+                <wx.StaticText ui.id="statictext2_1" label="'StaticText2_1'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+                <wx.StaticText ui.id="statictext2_2" label="'StaticText2_2'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+                <wx.StaticText ui.id="statictext2_3" label="'StaticText2_3'" style="wx.BORDER_SIMPLE">
+                    <x.StaticText BackgroundColour="wx.Colour(0,255,0)"/>
+                </wx.StaticText>
+            </wx.Panel>
+        </wx.Panel>
+        <wx.BoxSizer ui.id="main_sizer" orient="wx.VERTICAL" x.this.attach_sizer_to_window="x.main_panel">
+            <wx.SizerItem window="x.panel1"/>
+        </wx.BoxSizer>
+        <wx.GridSizer rows="2" cols="3" gap="(0,0)" x.this.attach_sizer_to_window="x.panel1">
+            <wx.SizerItem window="x.statictext1_1"/>
+            <wx.SizerItem window="x.statictext1_2"/>
+            <wx.SizerItem window="x.statictext1_3"/>
+            <wx.SizerItem window="x.statictext2_1"/>
+            <wx.SizerItem window="x.statictext2_2"/>
+            <wx.SizerItem window="x.statictext2_3"/>
+        </wx.GridSizer>
+    </wx.Frame>
+</xobjects>

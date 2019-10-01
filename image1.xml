@@ -21,7 +21,7 @@
         <wx.SizerItem window="x.image_panel" flag="wx.EXPAND" proportion="1"/>
         <wx.SizerItem window="x.control_panel" flag="wx.EXPAND"/>
         <wx.BoxSizer x.this.attach_sizer_to_window="x.image_panel">
-            <wx.SizerItem window="x.display_bitmap_panel" proportion="1" flag="wx.ALL|wx.EXPAND" border="5"/>
+            <wx.SizerItem window="x.display_bitmap_panel" proportion="1" flag="wx.ALL | wx.EXPAND" border="5"/>
         </wx.BoxSizer>
         <wx.BoxSizer x.this.attach_sizer_to_window="x.control_panel">
             <wx.SizerItem window="x.browse_button" proportion="0" flag="wx.ALL" border="5"/>

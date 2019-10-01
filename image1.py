@@ -13,6 +13,18 @@ wx_namespace = "local/xobj/wxobject"
 all_namespaces = {'': wx_namespace,
                   }
 
+# Runtime only UI
+# Generate UI but don't use (needs runtime)
+# Generate UI and use new generated UI (needs runtime)
+# Use old (previously) generated UI only (no runtime)
+
+# Runtime True or False
+# Generate UI True or False
+# Use new generated UI True or False
+# Use previously generated UI
+generated_ui_module_name='image1_generated.py'
+generated_ui_filename= generated_ui_module_name + '.py'
+
 
 class ThisUI(wxobject.UI):
     def __init__(self):
@@ -85,16 +97,19 @@ class AppUI(ThisUI):
 
 if __name__ == '__main__':
     def main():
+        ui = AppUI()
+        wxo = wxobject.WxObjects(ui)
+        xobj_parser = xobj.XobjParser(all_namespaces, wxo)
+
+        app = wx.App()
+
         my_module = sys.modules[__name__]
         file = my_module.__file__
         own_dir = os.path.dirname(file)
         file1 = os.path.join(own_dir, 'image1.xml')
-        ui = AppUI()
-        wxo = wxobject.WxObjects(ui)
-        xobj_parser = xobj.XobjParser(all_namespaces, wxo)
-        app = wx.App()
         xobj_parser.instantiate_from_file(file1)
-        wxo.output_codegen('image1_generated.py')
+
+        wxo.output_codegen(generated_ui_filename)
         ui.browse_button.Bind(wx.EVT_BUTTON, ui.on_browse_button)
         ui.display_bitmap_panel.Bind(wx.EVT_SIZE, ui.on_display_bitmap_panel_size)
         ui.main_frame.Show()
